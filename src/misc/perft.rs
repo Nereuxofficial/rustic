@@ -1,3 +1,8 @@
+// This version of the engine contains a preliminary version of
+// multi-threaded perft. Just like the hash-table earlier, it has been
+// removed for simplicity's sake, but it will return in one form or
+// another, in a later version.
+
 use crate::{
     board::Board,
     misc::print,
