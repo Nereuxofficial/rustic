@@ -21,17 +21,17 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 ======================================================================= */
 
 pub mod uci;
-// pub mod xboard;
+pub mod xboard;
 
 use crate::{
     board::Board,
+    comm::{uci::UciReport, xboard::XBoardReport},
     engine::defs::Information,
     movegen::defs::Move,
     search::defs::{SearchCurrentMove, SearchStats, SearchSummary},
 };
 use crossbeam_channel::Sender;
 use std::sync::{Arc, Mutex};
-use uci::UciReport;
 
 // These are the types of communication the engine is capable of.
 pub struct CommType;
@@ -72,6 +72,7 @@ pub enum CommControl {
 #[derive(PartialEq, Clone)]
 pub enum CommReport {
     Uci(UciReport),
+    XBoard(XBoardReport),
 }
 
 impl CommReport {

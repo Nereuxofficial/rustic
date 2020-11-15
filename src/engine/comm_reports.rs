@@ -25,7 +25,7 @@ use super::{
     Engine,
 };
 use crate::{
-    comm::{uci::UciReport, CommControl, CommReport},
+    comm::{uci::UciReport, xboard::XBoardReport, CommControl, CommReport},
     defs::FEN_START_POSITION,
     evaluation::evaluate_position,
     search::defs::{SearchControl, SearchMode, SearchParams},
@@ -37,26 +37,30 @@ impl Engine {
     pub fn comm_reports(&mut self, comm_report: &CommReport) {
         // Split out the comm reports according to their source.
         match comm_report {
-            CommReport::Uci(u) => self.comm_reports_uci(u),
+            CommReport::Uci(u) => self.cr_uci(u),
+            CommReport::XBoard(x) => self.cr_xboard(x),
         }
     }
 
     // Handles "Uci" Comm reports sent by the UCI-module.
-    fn comm_reports_uci(&mut self, u: &UciReport) {
+    fn cr_uci(&mut self, uci_report: &UciReport) {
         // Setup default variables.
         let mut sp = SearchParams::new();
         sp.quiet = self.settings.quiet;
 
-        match u {
-            // Uci commands
+        match uci_report {
+            // UCI commands.
             UciReport::Uci => self.comm.send(CommControl::Identify),
+
             UciReport::UciNewGame => self
                 .board
                 .lock()
                 .expect(ErrFatal::LOCK)
                 .fen_read(Some(FEN_START_POSITION))
                 .expect(ErrFatal::NEW_GAME),
+
             UciReport::IsReady => self.comm.send(CommControl::Ready),
+
             UciReport::Position(fen, moves) => {
                 let fen_result = self.board.lock().expect(ErrFatal::LOCK).fen_read(Some(fen));
 
@@ -107,18 +111,45 @@ impl Engine {
             }
 
             UciReport::Stop => self.search.send(SearchControl::Stop),
+
             UciReport::Quit => self.quit(),
 
             // Custom commands
             UciReport::Board => self.comm.send(CommControl::PrintBoard),
+
             UciReport::History => self.comm.send(CommControl::PrintHistory),
+
             UciReport::Eval => {
                 let e = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
                 let msg = format!("Evaluation: {} centipawns", e);
                 self.comm.send(CommControl::InfoString(msg));
             }
+
             UciReport::Help => self.comm.send(CommControl::PrintHelp),
+
             UciReport::Unknown => (),
+        }
+    }
+
+    fn cr_xboard(&mut self, xboard_report: &XBoardReport) {
+        match xboard_report {
+            // XBoard commands
+            XBoardReport::Quit => self.quit(),
+
+            // Custom commands
+            XBoardReport::Board => self.comm.send(CommControl::PrintBoard),
+
+            XBoardReport::History => self.comm.send(CommControl::PrintHistory),
+
+            XBoardReport::Eval => {
+                let e = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
+                let msg = format!("Evaluation: {} centipawns", e);
+                self.comm.send(CommControl::InfoString(msg));
+            }
+
+            XBoardReport::Help => self.comm.send(CommControl::PrintHelp),
+
+            XBoardReport::Unknown => println!("Unknown/Not implemented yet."),
         }
     }
 }
