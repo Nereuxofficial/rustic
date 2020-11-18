@@ -28,7 +28,6 @@ impl Engine {
         match search_report {
             SearchReport::Finished(m) => {
                 self.comm.send(CommControl::BestMove(*m));
-                self.comm.send(CommControl::Update);
             }
 
             SearchReport::SearchCurrentMove(curr_move) => {

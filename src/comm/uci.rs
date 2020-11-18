@@ -196,9 +196,6 @@ impl Uci {
                     CommControl::PrintHistory => Uci::print_history(&t_board),
                     CommControl::PrintHelp => Uci::print_help(),
                     CommControl::PrintMessage(m) => Uci::print_message(m),
-
-                    // Comm Control commands that are not (yet) used.
-                    CommControl::Update => (),
                 }
             }
         });

@@ -24,7 +24,6 @@ use super::{
     defs::{ErrFatal, Information},
     Engine,
 };
-use crate::comm::CommControl;
 use std::sync::Arc;
 
 impl Engine {
@@ -39,9 +38,6 @@ impl Engine {
         self.comm.init(info_tx.clone(), Arc::clone(&self.board));
         self.search
             .init(info_tx, Arc::clone(&self.board), Arc::clone(&self.mg));
-
-        // Update the Comm interface screen output (if any).
-        self.comm.send(CommControl::Update);
 
         // Keep looping forever until 'quit' received.
         while !self.quit {
