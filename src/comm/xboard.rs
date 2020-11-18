@@ -40,6 +40,7 @@ use std::{
 #[derive(PartialEq, Clone)]
 pub enum XBoardReport {
     // XBoard commands
+    ProtoVer(u8),
     Quit,
 
     // Custom commands
@@ -194,6 +195,7 @@ impl XBoard {
         // Convert to &str for matching the command.
         match i {
             // XBoard Commands
+            cmd if cmd.starts_with("protover") => XBoard::parse_protover(&cmd),
             cmd if cmd == "quit" || cmd == "exit" => CommReport::XBoard(XBoardReport::Quit),
 
             // Custom commands
@@ -209,7 +211,32 @@ impl XBoard {
 }
 
 // Implements XBoard responses to send to the G(UI).
-impl XBoard {}
+impl XBoard {
+    fn parse_protover(cmd: &str) -> CommReport {
+        enum Tokens {
+            Nothing,
+            ProtoVer,
+        }
+
+        let mut token = Tokens::Nothing;
+        let mut report = CommReport::XBoard(XBoardReport::Unknown);
+        let parts: Vec<String> = cmd.split_whitespace().map(|s| s.to_string()).collect();
+
+        for p in parts {
+            match p {
+                t if t == "protover" => token = Tokens::ProtoVer,
+                _ => match token {
+                    Tokens::Nothing => (),
+                    Tokens::ProtoVer => {
+                        let v = p.parse::<u8>().unwrap_or(0);
+                        report = CommReport::XBoard(XBoardReport::ProtoVer(v));
+                    }
+                },
+            }
+        }
+        report
+    }
+}
 
 // implements handling of custom commands. These are mostly used when using
 // the XBoard protocol directly in a terminal window.

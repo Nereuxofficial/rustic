@@ -134,6 +134,9 @@ impl Engine {
     fn cr_xboard(&mut self, xboard_report: &XBoardReport) {
         match xboard_report {
             // XBoard commands
+            XBoardReport::ProtoVer(v) => {
+                println!("Protocol version: {}", v);
+            }
             XBoardReport::Quit => self.quit(),
 
             // Custom commands
