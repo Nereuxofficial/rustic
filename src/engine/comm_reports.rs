@@ -120,9 +120,9 @@ impl Engine {
             UciReport::History => self.comm.send(CommControl::PrintHistory),
 
             UciReport::Eval => {
-                let e = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
-                let msg = format!("Evaluation: {} centipawns", e);
-                self.comm.send(CommControl::InfoString(msg));
+                let evaluation = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
+                let message = format!("{} centipawns", evaluation);
+                self.comm.send(CommControl::PrintMessage(message));
             }
 
             UciReport::Help => self.comm.send(CommControl::PrintHelp),
@@ -142,9 +142,9 @@ impl Engine {
             XBoardReport::History => self.comm.send(CommControl::PrintHistory),
 
             XBoardReport::Eval => {
-                let e = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
-                let msg = format!("Evaluation: {} centipawns", e);
-                self.comm.send(CommControl::InfoString(msg));
+                let evaluation = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
+                let message = format!("{} centipawns", evaluation);
+                self.comm.send(CommControl::PrintMessage(message));
             }
 
             XBoardReport::Help => self.comm.send(CommControl::PrintHelp),

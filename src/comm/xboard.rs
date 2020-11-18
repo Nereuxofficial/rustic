@@ -168,6 +168,7 @@ impl XBoard {
                     // Custom prints for use in the console.
                     CommControl::PrintBoard => XBoard::print_board(&t_board),
                     CommControl::PrintHistory => XBoard::print_history(&t_board),
+                    CommControl::PrintMessage(m) => XBoard::print_message(m),
                     CommControl::PrintHelp => XBoard::print_help(),
 
                     // Ignore stuff the XBoard protocol doesn't need.
@@ -231,6 +232,10 @@ impl XBoard {
         }
 
         std::mem::drop(mtx_board);
+    }
+
+    fn print_message(msg: String) {
+        println!("{}", msg);
     }
 
     fn print_help() {

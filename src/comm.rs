@@ -65,6 +65,7 @@ pub enum CommControl {
     PrintBoard,
     PrintHistory,
     PrintHelp,
+    PrintMessage(String),
 }
 
 // These are the commands a Comm module can create and send back to the

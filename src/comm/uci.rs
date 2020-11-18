@@ -195,6 +195,7 @@ impl Uci {
                     CommControl::PrintBoard => Uci::print_board(&t_board),
                     CommControl::PrintHistory => Uci::print_history(&t_board),
                     CommControl::PrintHelp => Uci::print_help(),
+                    CommControl::PrintMessage(m) => Uci::print_message(m),
 
                     // Comm Control commands that are not (yet) used.
                     CommControl::Update => (),
@@ -447,6 +448,10 @@ impl Uci {
         }
 
         std::mem::drop(mtx_board);
+    }
+
+    fn print_message(msg: String) {
+        println!("{}", msg);
     }
 
     fn print_help() {
