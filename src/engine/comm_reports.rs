@@ -116,17 +116,13 @@ impl Engine {
 
             // Custom commands
             UciReport::Board => self.comm.send(CommControl::PrintBoard),
-
             UciReport::History => self.comm.send(CommControl::PrintHistory),
-
             UciReport::Eval => {
                 let evaluation = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
                 let msg = format!("{} centipawns", evaluation);
                 self.comm.send(CommControl::Message(msg));
             }
-
             UciReport::Help => self.comm.send(CommControl::PrintHelp),
-
             UciReport::Unknown => (),
         }
     }
@@ -159,6 +155,14 @@ impl Engine {
                 f if f == "sigterm" => self.settings.xbfeatures.sigterm = true,
                 _ => (),
             },
+
+            XBoardReport::SetBoard(fen) => {
+                let fen_result = self.board.lock().expect(ErrFatal::LOCK).fen_read(Some(fen));
+                if fen_result.is_err() {
+                    let msg = format!("# {}", ErrNormal::FEN_FAILED.to_string());
+                    self.comm.send(CommControl::Message(msg));
+                }
+            }
 
             XBoardReport::Quit => self.quit(),
 
