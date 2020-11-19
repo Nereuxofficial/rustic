@@ -148,21 +148,29 @@ impl Engine {
 
             XBoardReport::Ping(n) => self.comm.send(CommControl::Pong(*n)),
 
+            // Set each feature setting accepted by the GUI to true.
+            XBoardReport::Accepted(feature) => match &feature[..] {
+                f if f == "done" => self.settings.xbfeatures.done = true,
+                f if f == "ping" => self.settings.xbfeatures.ping = true,
+                f if f == "setboard" => self.settings.xbfeatures.setboard = true,
+                f if f == "usermove" => self.settings.xbfeatures.usermove = true,
+                f if f == "debug" => self.settings.xbfeatures.debug = true,
+                f if f == "sigint" => self.settings.xbfeatures.sigint = true,
+                f if f == "sigterm" => self.settings.xbfeatures.sigterm = true,
+                _ => (),
+            },
+
             XBoardReport::Quit => self.quit(),
 
             // Custom commands
             XBoardReport::Board => self.comm.send(CommControl::PrintBoard),
-
             XBoardReport::History => self.comm.send(CommControl::PrintHistory),
-
             XBoardReport::Eval => {
                 let evaluation = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
                 let message = format!("{} centipawns", evaluation);
                 self.comm.send(CommControl::PrintMessage(message));
             }
-
             XBoardReport::Help => self.comm.send(CommControl::PrintHelp),
-
             XBoardReport::Unknown => println!("Unknown/Not implemented yet."),
         }
     }

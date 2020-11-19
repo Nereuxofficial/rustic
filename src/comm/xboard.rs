@@ -44,6 +44,7 @@ pub enum XBoardReport {
     XBoard,
     ProtoVer(u8),
     Ping(isize),
+    Accepted(String),
     Quit,
 
     // Custom commands
@@ -204,6 +205,7 @@ impl XBoard {
             cmd if cmd == "xboard" => CommReport::XBoard(XBoardReport::XBoard),
             cmd if cmd.starts_with("protover") => XBoard::parse_protover(&cmd),
             cmd if cmd.starts_with("ping") => XBoard::parse_ping(&cmd),
+            cmd if cmd.starts_with("accepted") => XBoard::parse_accepted(&cmd),
             cmd if cmd == "quit" || cmd == "exit" => CommReport::XBoard(XBoardReport::Quit),
 
             // Custom commands
@@ -264,6 +266,28 @@ impl XBoard {
                         let n = p.parse::<isize>().unwrap_or(0);
                         report = CommReport::XBoard(XBoardReport::Ping(n));
                     }
+                },
+            }
+        }
+        report
+    }
+
+    fn parse_accepted(cmd: &str) -> CommReport {
+        enum Tokens {
+            Nothing,
+            Accepted,
+        }
+
+        let mut token = Tokens::Nothing;
+        let mut report = CommReport::XBoard(XBoardReport::Unknown);
+        let parts: Vec<String> = cmd.split_whitespace().map(|s| s.to_string()).collect();
+
+        for p in parts {
+            match p {
+                t if t == "accepted" => token = Tokens::Accepted,
+                _ => match token {
+                    Tokens::Nothing => (),
+                    Tokens::Accepted => report = CommReport::XBoard(XBoardReport::Accepted(p)),
                 },
             }
         }
