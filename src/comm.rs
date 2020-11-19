@@ -59,6 +59,7 @@ pub enum CommControl {
     SearchStats(SearchStats),          // Transmit search Statistics.
     InfoString(String),                // Transmit general information.
     BestMove(Move),                    // Transmit the engine's best move.
+    Pong(isize),
 
     // Output to screen when running in a terminal window.
     PrintBoard,

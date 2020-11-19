@@ -26,7 +26,7 @@ use super::{
 };
 use crate::{
     comm::{uci::UciReport, xboard::XBoardReport, CommControl, CommReport},
-    defs::FEN_START_POSITION,
+    defs::{About, FEN_START_POSITION},
     evaluation::evaluate_position,
     search::defs::{SearchControl, SearchMode, SearchParams},
 };
@@ -134,9 +134,20 @@ impl Engine {
     fn cr_xboard(&mut self, xboard_report: &XBoardReport) {
         match xboard_report {
             // XBoard commands
+            XBoardReport::XBoard => (), // No action required.
+
             XBoardReport::ProtoVer(v) => {
-                println!("Protocol version: {}", v);
+                if *v == 2 {
+                    self.comm.send(CommControl::Identify);
+                    self.comm.send(CommControl::Ready);
+                } else {
+                    let msg = format!("Error: {} only supports XBoard version 2.", About::ENGINE);
+                    self.comm.send(CommControl::PrintMessage(msg));
+                }
             }
+
+            XBoardReport::Ping(n) => self.comm.send(CommControl::Pong(*n)),
+
             XBoardReport::Quit => self.quit(),
 
             // Custom commands

@@ -196,6 +196,10 @@ impl Uci {
                     CommControl::PrintHistory => Uci::print_history(&t_board),
                     CommControl::PrintHelp => Uci::print_help(),
                     CommControl::PrintMessage(m) => Uci::print_message(m),
+
+                    // Ignore everything else. (Additional comm controls to
+                    // support other protocols in the engine.)
+                    _ => (),
                 }
             }
         });

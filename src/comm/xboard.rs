@@ -25,6 +25,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 use super::{CommControl, CommReport, CommType, IComm};
 use crate::{
     board::Board,
+    defs::About,
     engine::defs::{ErrFatal, Information},
     misc::print,
 };
@@ -40,7 +41,9 @@ use std::{
 #[derive(PartialEq, Clone)]
 pub enum XBoardReport {
     // XBoard commands
+    XBoard,
     ProtoVer(u8),
+    Ping(isize),
     Quit,
 
     // Custom commands
@@ -164,6 +167,9 @@ impl XBoard {
                 let control = control_rx.recv().expect(ErrFatal::CHANNEL);
                 match control {
                     // Perform command as sent by the engine thread.
+                    CommControl::Identify => XBoard::identify(),
+                    CommControl::Ready => XBoard::ready(),
+                    CommControl::Pong(n) => XBoard::pong(n),
                     CommControl::Quit => quit = true,
 
                     // Custom prints for use in the console.
@@ -195,7 +201,9 @@ impl XBoard {
         // Convert to &str for matching the command.
         match i {
             // XBoard Commands
+            cmd if cmd == "xboard" => CommReport::XBoard(XBoardReport::XBoard),
             cmd if cmd.starts_with("protover") => XBoard::parse_protover(&cmd),
+            cmd if cmd.starts_with("ping") => XBoard::parse_ping(&cmd),
             cmd if cmd == "quit" || cmd == "exit" => CommReport::XBoard(XBoardReport::Quit),
 
             // Custom commands
@@ -219,7 +227,7 @@ impl XBoard {
         }
 
         let mut token = Tokens::Nothing;
-        let mut report = CommReport::XBoard(XBoardReport::Unknown);
+        let mut report = CommReport::XBoard(XBoardReport::ProtoVer(0));
         let parts: Vec<String> = cmd.split_whitespace().map(|s| s.to_string()).collect();
 
         for p in parts {
@@ -235,6 +243,52 @@ impl XBoard {
             }
         }
         report
+    }
+
+    fn parse_ping(cmd: &str) -> CommReport {
+        enum Tokens {
+            Nothing,
+            Ping,
+        }
+
+        let mut token = Tokens::Nothing;
+        let mut report = CommReport::XBoard(XBoardReport::Ping(0));
+        let parts: Vec<String> = cmd.split_whitespace().map(|s| s.to_string()).collect();
+
+        for p in parts {
+            match p {
+                t if t == "ping" => token = Tokens::Ping,
+                _ => match token {
+                    Tokens::Nothing => (),
+                    Tokens::Ping => {
+                        let n = p.parse::<isize>().unwrap_or(0);
+                        report = CommReport::XBoard(XBoardReport::Ping(n));
+                    }
+                },
+            }
+        }
+        report
+    }
+}
+
+impl XBoard {
+    fn identify() {
+        println!("feature done=0");
+        println!("feature myname=\"{} {}\"", About::ENGINE, About::VERSION);
+        println!("feature ping=1");
+        println!("feature setboard=1");
+        println!("feature usermove=1");
+        println!("feature debug=1");
+        println!("feature sigint=0");
+        println!("feature sigterm=0");
+    }
+
+    fn ready() {
+        println!("feature done=1");
+    }
+
+    fn pong(n: isize) {
+        println!("pong {}", n);
     }
 }
 
