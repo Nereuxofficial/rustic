@@ -59,13 +59,13 @@ pub enum CommControl {
     SearchStats(SearchStats),          // Transmit search Statistics.
     InfoString(String),                // Transmit general information.
     BestMove(Move),                    // Transmit the engine's best move.
-    Pong(isize),
+    Pong(isize),                       // Transmit "Pong" when "Ping" is received.
+    Message(String),                   // Output a literal string.
 
     // Output to screen when running in a terminal window.
     PrintBoard,
     PrintHistory,
     PrintHelp,
-    PrintMessage(String),
 }
 
 // These are the commands a Comm module can create and send back to the

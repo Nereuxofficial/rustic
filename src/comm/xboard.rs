@@ -54,7 +54,7 @@ pub enum XBoardReport {
     Help,
 
     // Empty or unknown command.
-    Unknown,
+    Unknown(String),
 }
 
 // This struct is used to instantiate the Comm module.
@@ -171,12 +171,13 @@ impl XBoard {
                     CommControl::Identify => XBoard::identify(),
                     CommControl::Ready => XBoard::ready(),
                     CommControl::Pong(n) => XBoard::pong(n),
+                    CommControl::Message(m) => XBoard::message(m),
                     CommControl::Quit => quit = true,
 
                     // Custom prints for use in the console.
                     CommControl::PrintBoard => XBoard::print_board(&t_board),
                     CommControl::PrintHistory => XBoard::print_history(&t_board),
-                    CommControl::PrintMessage(m) => XBoard::print_message(m),
+
                     CommControl::PrintHelp => XBoard::print_help(),
 
                     // Ignore stuff the XBoard protocol doesn't need.
@@ -215,7 +216,7 @@ impl XBoard {
             cmd if cmd == "help" => CommReport::XBoard(XBoardReport::Help),
 
             // Everything else is ignored.
-            _ => CommReport::XBoard(XBoardReport::Unknown),
+            _ => CommReport::XBoard(XBoardReport::Unknown(i)),
         }
     }
 }
@@ -279,7 +280,7 @@ impl XBoard {
         }
 
         let mut token = Tokens::Nothing;
-        let mut report = CommReport::XBoard(XBoardReport::Unknown);
+        let mut report = CommReport::XBoard(XBoardReport::Unknown(String::from(cmd)));
         let parts: Vec<String> = cmd.split_whitespace().map(|s| s.to_string()).collect();
 
         for p in parts {
@@ -314,6 +315,10 @@ impl XBoard {
     fn pong(n: isize) {
         println!("pong {}", n);
     }
+
+    fn message(msg: String) {
+        println!("{}", msg);
+    }
 }
 
 // implements handling of custom commands. These are mostly used when using
@@ -337,10 +342,6 @@ impl XBoard {
         }
 
         std::mem::drop(mtx_board);
-    }
-
-    fn print_message(msg: String) {
-        println!("{}", msg);
     }
 
     fn print_help() {

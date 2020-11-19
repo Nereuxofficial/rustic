@@ -121,8 +121,8 @@ impl Engine {
 
             UciReport::Eval => {
                 let evaluation = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
-                let message = format!("{} centipawns", evaluation);
-                self.comm.send(CommControl::PrintMessage(message));
+                let msg = format!("{} centipawns", evaluation);
+                self.comm.send(CommControl::Message(msg));
             }
 
             UciReport::Help => self.comm.send(CommControl::PrintHelp),
@@ -141,8 +141,8 @@ impl Engine {
                     self.comm.send(CommControl::Identify);
                     self.comm.send(CommControl::Ready);
                 } else {
-                    let msg = format!("Error: {} only supports XBoard version 2.", About::ENGINE);
-                    self.comm.send(CommControl::PrintMessage(msg));
+                    let msg = format!("# {} only supports XBoard version 2.", About::ENGINE);
+                    self.comm.send(CommControl::Message(msg));
                 }
             }
 
@@ -167,11 +167,14 @@ impl Engine {
             XBoardReport::History => self.comm.send(CommControl::PrintHistory),
             XBoardReport::Eval => {
                 let evaluation = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
-                let message = format!("{} centipawns", evaluation);
-                self.comm.send(CommControl::PrintMessage(message));
+                let msg = format!("# {} centipawns", evaluation);
+                self.comm.send(CommControl::Message(msg));
             }
             XBoardReport::Help => self.comm.send(CommControl::PrintHelp),
-            XBoardReport::Unknown => println!("Unknown/Not implemented yet."),
+            XBoardReport::Unknown(cmd) => {
+                let msg = format!("# Command '{}' is unknown or not implemented.", cmd);
+                self.comm.send(CommControl::Message(msg));
+            }
         }
     }
 }

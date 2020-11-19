@@ -190,12 +190,12 @@ impl Uci {
                     CommControl::SearchStats(stats) => Uci::search_stats(&stats),
                     CommControl::InfoString(msg) => Uci::info_string(&msg),
                     CommControl::BestMove(bm) => Uci::best_move(&bm),
+                    CommControl::Message(m) => Uci::message(m),
 
                     // Custom prints for use in the console.
                     CommControl::PrintBoard => Uci::print_board(&t_board),
                     CommControl::PrintHistory => Uci::print_history(&t_board),
                     CommControl::PrintHelp => Uci::print_help(),
-                    CommControl::PrintMessage(m) => Uci::print_message(m),
 
                     // Ignore everything else. (Additional comm controls to
                     // support other protocols in the engine.)
@@ -426,6 +426,10 @@ impl Uci {
     fn best_move(m: &Move) {
         println!("bestmove {}", m.as_string());
     }
+
+    fn message(msg: String) {
+        println!("{}", msg);
+    }
 }
 
 // implements handling of custom commands. These are mostly used when using
@@ -449,10 +453,6 @@ impl Uci {
         }
 
         std::mem::drop(mtx_board);
-    }
-
-    fn print_message(msg: String) {
-        println!("{}", msg);
     }
 
     fn print_help() {
