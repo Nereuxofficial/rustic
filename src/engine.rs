@@ -81,7 +81,7 @@ impl Engine {
             settings: Settings {
                 threads,
                 quiet,
-                xboard_features: XBoardFeatures {
+                xbfeatures: XBoardFeatures {
                     done: false,
                     ping: false,
                     setboard: false,

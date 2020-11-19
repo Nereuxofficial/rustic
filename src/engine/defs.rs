@@ -56,7 +56,7 @@ pub struct XBoardFeatures {
 pub struct Settings {
     pub threads: usize,
     pub quiet: bool,
-    pub xboard_features: XBoardFeatures,
+    pub xbfeatures: XBoardFeatures,
 }
 
 // This enum provides informatin to the engine, with regard to incoming
