@@ -31,7 +31,7 @@ use crate::{
     board::Board,
     comm::{uci::Uci, xboard::XBoard, CommControl, CommType, IComm},
     defs::EngineRunResult,
-    engine::defs::{ErrFatal, Information, Settings},
+    engine::defs::{ErrFatal, Information, Settings, XBoardFeatures},
     misc::{cmdline::CmdLine, perft},
     movegen::MoveGenerator,
     search::{defs::SearchControl, Search},
@@ -78,7 +78,19 @@ impl Engine {
         // Create the engine itself.
         Self {
             quit: false,
-            settings: Settings { threads, quiet },
+            settings: Settings {
+                threads,
+                quiet,
+                xboard_features: XBoardFeatures {
+                    done: false,
+                    ping: false,
+                    setboard: false,
+                    usermove: false,
+                    debug: false,
+                    sigint: false,
+                    sigterm: false,
+                },
+            },
             cmdline,
             comm,
             board: Arc::new(Mutex::new(Board::new())),

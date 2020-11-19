@@ -42,10 +42,21 @@ impl ErrNormal {
     pub const FEN_FAILED: &'static str = "Setting up FEN failed. Board not changed.";
 }
 
+pub struct XBoardFeatures {
+    pub done: bool,
+    pub ping: bool,
+    pub setboard: bool,
+    pub usermove: bool,
+    pub debug: bool,
+    pub sigint: bool,
+    pub sigterm: bool,
+}
+
 // This struct holds the engine's settings.
 pub struct Settings {
     pub threads: usize,
     pub quiet: bool,
+    pub xboard_features: XBoardFeatures,
 }
 
 // This enum provides informatin to the engine, with regard to incoming
