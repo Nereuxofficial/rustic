@@ -146,13 +146,13 @@ impl Engine {
 
             // Set each feature setting accepted by the GUI to true.
             XBoardReport::Accepted(feature) => match &feature[..] {
-                f if f == "done" => self.settings.xbfeatures.done = true,
-                f if f == "ping" => self.settings.xbfeatures.ping = true,
-                f if f == "setboard" => self.settings.xbfeatures.setboard = true,
-                f if f == "usermove" => self.settings.xbfeatures.usermove = true,
-                f if f == "debug" => self.settings.xbfeatures.debug = true,
-                f if f == "sigint" => self.settings.xbfeatures.sigint = true,
-                f if f == "sigterm" => self.settings.xbfeatures.sigterm = true,
+                f if f == "done" => self.settings.xboard.features.done = true,
+                f if f == "ping" => self.settings.xboard.features.ping = true,
+                f if f == "setboard" => self.settings.xboard.features.setboard = true,
+                f if f == "usermove" => self.settings.xboard.features.usermove = true,
+                f if f == "debug" => self.settings.xboard.features.debug = true,
+                f if f == "sigint" => self.settings.xboard.features.sigint = true,
+                f if f == "sigterm" => self.settings.xboard.features.sigterm = true,
                 _ => (),
             },
 

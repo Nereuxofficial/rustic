@@ -52,11 +52,15 @@ pub struct XBoardFeatures {
     pub sigterm: bool,
 }
 
+pub struct XBoardSettings {
+    pub features: XBoardFeatures,
+}
+
 // This struct holds the engine's settings.
 pub struct Settings {
     pub threads: usize,
     pub quiet: bool,
-    pub xbfeatures: XBoardFeatures,
+    pub xboard: XBoardSettings,
 }
 
 // This enum provides informatin to the engine, with regard to incoming

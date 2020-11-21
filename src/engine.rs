@@ -31,7 +31,7 @@ use crate::{
     board::Board,
     comm::{uci::Uci, xboard::XBoard, CommControl, CommType, IComm},
     defs::EngineRunResult,
-    engine::defs::{ErrFatal, Information, Settings, XBoardFeatures},
+    engine::defs::{ErrFatal, Information, Settings, XBoardFeatures, XBoardSettings},
     misc::{cmdline::CmdLine, perft},
     movegen::MoveGenerator,
     search::{defs::SearchControl, Search},
@@ -81,14 +81,16 @@ impl Engine {
             settings: Settings {
                 threads,
                 quiet,
-                xbfeatures: XBoardFeatures {
-                    done: false,
-                    ping: false,
-                    setboard: false,
-                    usermove: false,
-                    debug: false,
-                    sigint: false,
-                    sigterm: false,
+                xboard: XBoardSettings {
+                    features: XBoardFeatures {
+                        done: false,
+                        ping: false,
+                        setboard: false,
+                        usermove: false,
+                        debug: false,
+                        sigint: false,
+                        sigterm: false,
+                    },
                 },
             },
             cmdline,
@@ -102,11 +104,14 @@ impl Engine {
 
     // Run the engine.
     pub fn run(&mut self) -> EngineRunResult {
-        if self.comm.get_protocol_name() != CommType::XBOARD {
+        let protocol = self.comm.get_protocol_name();
+        if protocol != CommType::XBOARD {
             self.print_ascii_logo();
             self.print_about();
-            self.print_settings(self.settings.threads, self.comm.get_protocol_name());
+            self.print_settings(self.settings.threads, protocol);
             println!();
+        } else {
+            self.print_short_about(self.settings.threads, protocol);
         }
 
         // Setup position and abort if this fails.
