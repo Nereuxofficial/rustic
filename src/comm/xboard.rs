@@ -42,6 +42,7 @@ use std::{
 pub enum XBoardReport {
     // XBoard commands
     XBoard,
+    Random,
     ProtoVer(u8),
     Ping(isize),
     Accepted(String),
@@ -205,11 +206,12 @@ impl XBoard {
         match i {
             // XBoard Commands
             cmd if cmd == "xboard" => CommReport::XBoard(XBoardReport::XBoard),
+            cmd if cmd == "random" => CommReport::XBoard(XBoardReport::Random),
+            cmd if cmd == "quit" || cmd == "exit" => CommReport::XBoard(XBoardReport::Quit),
             cmd if cmd.starts_with("protover") => XBoard::parse_protover(&cmd),
             cmd if cmd.starts_with("ping") => XBoard::parse_ping(&cmd),
             cmd if cmd.starts_with("accepted") => XBoard::parse_accepted(&cmd),
             cmd if cmd.starts_with("setboard") => XBoard::parse_setboard(&cmd),
-            cmd if cmd == "quit" || cmd == "exit" => CommReport::XBoard(XBoardReport::Quit),
 
             // Custom commands
             cmd if cmd == "board" => CommReport::XBoard(XBoardReport::Board),

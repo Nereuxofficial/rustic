@@ -130,8 +130,6 @@ impl Engine {
     fn cr_xboard(&mut self, xboard_report: &XBoardReport) {
         match xboard_report {
             // XBoard commands
-            XBoardReport::XBoard => (), // No action required.
-
             XBoardReport::ProtoVer(v) => {
                 if *v == 2 {
                     self.comm.send(CommControl::Identify);
@@ -165,6 +163,10 @@ impl Engine {
             }
 
             XBoardReport::Quit => self.quit(),
+
+            // Ignore the following incoming reports from the XBoard comm
+            XBoardReport::XBoard => (), // Response to this command is not required.
+            XBoardReport::Random => (), // Engine doesn't support picking random moves.
 
             // Custom commands
             XBoardReport::Board => self.comm.send(CommControl::PrintBoard),
