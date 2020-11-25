@@ -162,6 +162,14 @@ impl Engine {
                 }
             }
 
+            XBoardReport::Analyze => {
+                println!("Analyzing.");
+            }
+
+            XBoardReport::Exit => {
+                println!("Exit analysis mode.");
+            }
+
             XBoardReport::Quit => self.quit(),
 
             // Ignore the following incoming reports from the XBoard comm

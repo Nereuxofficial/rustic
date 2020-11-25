@@ -45,7 +45,9 @@ pub enum XBoardReport {
     Ping(isize),
     Accepted(String),
     SetBoard(String),
-    Quit,
+    Analyze,
+    Exit, // Stop analyzing current position.
+    Quit, // Completely shut down engine.
 
     // These commands will be sent to the engine, but it will ignore them;
     // either because no reply is required, or the functionality is not
@@ -212,6 +214,8 @@ impl XBoard {
         match i {
             // XBoard Commands
             cmd if cmd == "quit" => CommReport::XBoard(XBoardReport::Quit),
+            cmd if cmd == "analyze" => CommReport::XBoard(XBoardReport::Analyze),
+            cmd if cmd == "exit" => CommReport::XBoard(XBoardReport::Exit),
             cmd if cmd.starts_with("protover") => XBoard::parse_protover(&cmd),
             cmd if cmd.starts_with("ping") => XBoard::parse_ping(&cmd),
             cmd if cmd.starts_with("accepted") => XBoard::parse_accepted(&cmd),
