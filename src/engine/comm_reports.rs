@@ -128,8 +128,13 @@ impl Engine {
     }
 
     fn cr_xboard(&mut self, xboard_report: &XBoardReport) {
+        // Setup default variables.
+        let mut sp = SearchParams::new();
+
         match xboard_report {
-            // XBoard commands
+            // XBoard commands "protover X" is similar to command "uci".
+            // The engine replies with an identification and a list of
+            // features and options it supports.
             XBoardReport::ProtoVer(v) => {
                 if *v == 2 {
                     self.comm.send(CommControl::Identify);
@@ -140,9 +145,11 @@ impl Engine {
                 }
             }
 
+            // Engine is alive: reply to incoming "ping n" with "pong n"
             XBoardReport::Ping(n) => self.comm.send(CommControl::Pong(*n)),
 
-            // Set each feature setting accepted by the GUI to true.
+            // Set each feature accepted by the GUI to true; in case we
+            // need to know this later, somewhere in the engine.
             XBoardReport::Accepted(feature) => match &feature[..] {
                 f if f == "done" => self.settings.xboard.features.done = true,
                 f if f == "ping" => self.settings.xboard.features.ping = true,
@@ -154,6 +161,7 @@ impl Engine {
                 _ => (),
             },
 
+            // xboard "setboard <fen>" is equivalent to uci "position <fen>"
             XBoardReport::SetBoard(fen) => {
                 let fen_result = self.board.lock().expect(ErrFatal::LOCK).fen_read(Some(fen));
                 if fen_result.is_err() {
@@ -162,13 +170,14 @@ impl Engine {
                 }
             }
 
+            // xboard "analyze" is equivalent to uci "go infinite"
             XBoardReport::Analyze => {
-                println!("Analyzing.");
+                sp.search_mode = SearchMode::Infinite;
+                self.search.send(SearchControl::Start(sp));
             }
 
-            XBoardReport::Exit => {
-                println!("Exit analysis mode.");
-            }
+            // xboard "exit" is equivalent to uci "stop"
+            XBoardReport::Exit => self.search.send(SearchControl::Stop),
 
             XBoardReport::Quit => self.quit(),
 
