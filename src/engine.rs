@@ -31,7 +31,7 @@ use crate::{
     board::Board,
     comm::{uci::Uci, xboard::XBoard, CommControl, CommType, IComm},
     defs::EngineRunResult,
-    engine::defs::{ErrFatal, Information, Settings, XBoardFeatures, XBoardSettings},
+    engine::defs::{ErrFatal, Information, Settings, XBoardFeatures, XBoardSpecifics},
     misc::{cmdline::CmdLine, perft},
     movegen::MoveGenerator,
     search::{defs::SearchControl, Search},
@@ -50,6 +50,7 @@ use crate::{
 pub struct Engine {
     quit: bool,                             // Flag that will quit the main thread.
     settings: Settings,                     // Struct holding all the settings.
+    xboard: XBoardSpecifics,                // Storage for XBoard specifics.
     cmdline: CmdLine,                       // Command line interpreter.
     comm: Box<dyn IComm>,                   // Communications (active).
     board: Arc<Mutex<Board>>,               // This is the main engine board.
@@ -78,19 +79,16 @@ impl Engine {
         // Create the engine itself.
         Self {
             quit: false,
-            settings: Settings {
-                threads,
-                quiet,
-                xboard: XBoardSettings {
-                    features: XBoardFeatures {
-                        done: false,
-                        ping: false,
-                        setboard: false,
-                        usermove: false,
-                        debug: false,
-                        sigint: false,
-                        sigterm: false,
-                    },
+            settings: Settings { threads, quiet },
+            xboard: XBoardSpecifics {
+                features: XBoardFeatures {
+                    done: false,
+                    ping: false,
+                    setboard: false,
+                    usermove: false,
+                    debug: false,
+                    sigint: false,
+                    sigterm: false,
                 },
             },
             cmdline,

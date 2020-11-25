@@ -52,7 +52,7 @@ pub struct XBoardFeatures {
     pub sigterm: bool,
 }
 
-pub struct XBoardSettings {
+pub struct XBoardSpecifics {
     pub features: XBoardFeatures,
 }
 
@@ -60,7 +60,6 @@ pub struct XBoardSettings {
 pub struct Settings {
     pub threads: usize,
     pub quiet: bool,
-    pub xboard: XBoardSettings,
 }
 
 // This enum provides informatin to the engine, with regard to incoming
