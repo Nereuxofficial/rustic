@@ -41,13 +41,19 @@ use std::{
 #[derive(PartialEq, Clone)]
 pub enum XBoardReport {
     // XBoard commands
-    XBoard,
-    Random,
     ProtoVer(u8),
     Ping(isize),
     Accepted(String),
     SetBoard(String),
     Quit,
+
+    // These commands will be sent to the engine, but it will ignore them;
+    // either because no reply is required, or the functionality is not
+    // supported by the engine at this time.
+    XBoard,
+    Random,
+    Easy,
+    Hard,
 
     // Custom commands
     Board,
@@ -205,13 +211,17 @@ impl XBoard {
         // Convert to &str for matching the command.
         match i {
             // XBoard Commands
-            cmd if cmd == "xboard" => CommReport::XBoard(XBoardReport::XBoard),
-            cmd if cmd == "random" => CommReport::XBoard(XBoardReport::Random),
-            cmd if cmd == "quit" || cmd == "exit" => CommReport::XBoard(XBoardReport::Quit),
+            cmd if cmd == "quit" => CommReport::XBoard(XBoardReport::Quit),
             cmd if cmd.starts_with("protover") => XBoard::parse_protover(&cmd),
             cmd if cmd.starts_with("ping") => XBoard::parse_ping(&cmd),
             cmd if cmd.starts_with("accepted") => XBoard::parse_accepted(&cmd),
             cmd if cmd.starts_with("setboard") => XBoard::parse_setboard(&cmd),
+
+            // Commands the engine is going to ignore.
+            cmd if cmd == "xboard" => CommReport::XBoard(XBoardReport::XBoard),
+            cmd if cmd == "random" => CommReport::XBoard(XBoardReport::Random),
+            cmd if cmd == "easy" => CommReport::XBoard(XBoardReport::Easy),
+            cmd if cmd == "hard" => CommReport::XBoard(XBoardReport::Hard),
 
             // Custom commands
             cmd if cmd == "board" => CommReport::XBoard(XBoardReport::Board),
@@ -383,7 +393,6 @@ impl XBoard {
         println!("board     :   Print the current board state.");
         println!("history   :   Print a list of past board states.");
         println!("eval      :   Print evaluation for side to move.");
-        println!("exit      :   Quit/Exit the engine.");
         println!();
     }
 }

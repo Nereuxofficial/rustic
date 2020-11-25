@@ -166,7 +166,9 @@ impl Engine {
 
             // Ignore the following incoming reports from the XBoard comm
             XBoardReport::XBoard => (), // Response to this command is not required.
-            XBoardReport::Random => (), // Engine doesn't support picking random moves.
+            XBoardReport::Random => (), // Engine doesn't support move randomization.
+            XBoardReport::Easy => (),   // Pondering off (Pondering not yet supported.)
+            XBoardReport::Hard => (),   // Pondering on (Pondering not yet supported.)
 
             // Custom commands
             XBoardReport::Board => self.comm.send(CommControl::PrintBoard),
