@@ -58,18 +58,18 @@ impl Engine {
         // Prepare shorthand variables.
         let empty = (0usize, 0usize, 0usize);
         let potential_move = parse::algebraic_move_to_number(&m[..]).unwrap_or(empty);
-        let is_pseudo_legal = self.pseudo_legal(potential_move, &self.board, &self.mg);
+        let is_plm = self.is_pseudo_legal_move(potential_move, &self.board, &self.mg);
         let mut is_legal = false;
 
-        if let Ok(ips) = is_pseudo_legal {
-            is_legal = self.board.lock().expect(ErrFatal::LOCK).make(ips, &self.mg);
+        if let Ok(m) = is_plm {
+            is_legal = self.board.lock().expect(ErrFatal::LOCK).make(m, &self.mg);
         }
         is_legal
     }
 
     // After the engine receives an incoming move, it checks if this move
     // is actually in the list of pseudo-legal moves for this position.
-    pub fn pseudo_legal(
+    pub fn is_pseudo_legal_move(
         &self,
         m: PotentialMove,
         board: &Mutex<Board>,
