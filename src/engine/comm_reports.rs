@@ -65,6 +65,7 @@ impl Engine {
                 let fen_result = self.board.lock().expect(ErrFatal::LOCK).fen_read(Some(fen));
 
                 if fen_result.is_ok() {
+                    self.create_legal_move_list();
                     for m in moves.iter() {
                         let ok = self.execute_move(m.clone());
                         if !ok {
@@ -165,10 +166,14 @@ impl Engine {
                 _ => (),
             },
 
-            // xboard "setboard <fen>" is equivalent to uci "position <fen>"
+            // xboard "setboard <fen>" is equivalent to uci "position
+            // <fen>", but without the "moves" part.
             XBoardReport::SetBoard(fen) => {
                 let fen_result = self.board.lock().expect(ErrFatal::LOCK).fen_read(Some(fen));
-                if fen_result.is_err() {
+
+                if fen_result.is_ok() {
+                    self.create_legal_move_list();
+                } else {
                     let msg = format!("# {}", ErrNormal::FEN_FAILED.to_string());
                     self.comm.send(CommControl::Message(msg));
                 }
