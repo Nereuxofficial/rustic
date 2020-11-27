@@ -117,6 +117,10 @@ impl Engine {
             // Custom commands
             UciReport::Board => self.comm.send(CommControl::PrintBoard),
             UciReport::History => self.comm.send(CommControl::PrintHistory),
+            UciReport::Legal => {
+                let ml = Box::new(self.legal_moves);
+                self.comm.send(CommControl::PrintLegal(ml))
+            }
             UciReport::Eval => {
                 let evaluation = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
                 let msg = format!("{} centipawns", evaluation);
@@ -190,6 +194,10 @@ impl Engine {
             // Custom commands
             XBoardReport::Board => self.comm.send(CommControl::PrintBoard),
             XBoardReport::History => self.comm.send(CommControl::PrintHistory),
+            XBoardReport::Legal => {
+                let ml = Box::new(self.legal_moves);
+                self.comm.send(CommControl::PrintLegal(ml));
+            }
             XBoardReport::Eval => {
                 let evaluation = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
                 let msg = format!("# {} centipawns", evaluation);

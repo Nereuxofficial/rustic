@@ -27,7 +27,7 @@ use crate::{
     board::Board,
     comm::{uci::UciReport, xboard::XBoardReport},
     engine::defs::Information,
-    movegen::defs::Move,
+    movegen::defs::{Move, MoveList},
     search::defs::{SearchCurrentMove, SearchStats, SearchSummary},
 };
 use crossbeam_channel::Sender;
@@ -65,6 +65,7 @@ pub enum CommControl {
     // Output to screen when running in a terminal window.
     PrintBoard,
     PrintHistory,
+    PrintLegal(Box<MoveList>),
     PrintHelp,
 }
 

@@ -28,7 +28,7 @@ use crate::{
     defs::{About, FEN_START_POSITION},
     engine::defs::{ErrFatal, Information},
     misc::print,
-    movegen::defs::Move,
+    movegen::defs::{Move, MoveList},
     search::defs::{GameTime, SearchCurrentMove, SearchStats, SearchSummary, CHECKMATE},
 };
 use crossbeam_channel::{self, Sender};
@@ -60,6 +60,7 @@ pub enum UciReport {
     // Custom commands
     Board,
     History,
+    Legal,
     Eval,
     Help,
 
@@ -195,6 +196,7 @@ impl Uci {
                     // Custom prints for use in the console.
                     CommControl::PrintBoard => Uci::print_board(&t_board),
                     CommControl::PrintHistory => Uci::print_history(&t_board),
+                    CommControl::PrintLegal(ml) => Uci::print_legal(ml),
                     CommControl::PrintHelp => Uci::print_help(),
 
                     // Ignore everything else. (Additional comm controls to
@@ -225,13 +227,14 @@ impl Uci {
             cmd if cmd == "ucinewgame" => CommReport::Uci(UciReport::UciNewGame),
             cmd if cmd == "isready" => CommReport::Uci(UciReport::IsReady),
             cmd if cmd == "stop" => CommReport::Uci(UciReport::Stop),
-            cmd if cmd == "quit" || cmd == "exit" => CommReport::Uci(UciReport::Quit),
+            cmd if cmd == "quit" => CommReport::Uci(UciReport::Quit),
             cmd if cmd.starts_with("position") => Uci::parse_position(&cmd),
             cmd if cmd.starts_with("go") => Uci::parse_go(&cmd),
 
             // Custom commands
             cmd if cmd == "board" => CommReport::Uci(UciReport::Board),
             cmd if cmd == "history" => CommReport::Uci(UciReport::History),
+            cmd if cmd == "legal" => CommReport::Uci(UciReport::Legal),
             cmd if cmd == "eval" => CommReport::Uci(UciReport::Eval),
             cmd if cmd == "help" => CommReport::Uci(UciReport::Help),
 
@@ -455,6 +458,13 @@ impl Uci {
         std::mem::drop(mtx_board);
     }
 
+    fn print_legal(ml: Box<MoveList>) {
+        for i in 0..ml.len() {
+            print::move_data(ml.get_move(i), i);
+        }
+        println!();
+    }
+
     fn print_help() {
         println!("The engine is in UCI communication mode. It supports some custom");
         println!("non-UCI commands to make use through a terminal window easier.");
@@ -465,8 +475,8 @@ impl Uci {
         println!("help      :   This help information.");
         println!("board     :   Print the current board state.");
         println!("history   :   Print a list of past board states.");
+        println!("legal     :   Print the legal moves in the position.");
         println!("eval      :   Print evaluation for side to move.");
-        println!("exit      :   Quit/Exit the engine.");
         println!();
     }
 }

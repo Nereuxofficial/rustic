@@ -28,6 +28,7 @@ use crate::{
     defs::About,
     engine::defs::{ErrFatal, Information},
     misc::print,
+    movegen::defs::MoveList,
 };
 use crossbeam_channel::{self, Sender};
 use std::{
@@ -60,6 +61,7 @@ pub enum XBoardReport {
     // Custom commands
     Board,
     History,
+    Legal,
     Eval,
     Help,
 
@@ -187,7 +189,7 @@ impl XBoard {
                     // Custom prints for use in the console.
                     CommControl::PrintBoard => XBoard::print_board(&t_board),
                     CommControl::PrintHistory => XBoard::print_history(&t_board),
-
+                    CommControl::PrintLegal(ml) => XBoard::print_legal(ml),
                     CommControl::PrintHelp => XBoard::print_help(),
 
                     // Ignore stuff the XBoard protocol doesn't need.
@@ -230,6 +232,7 @@ impl XBoard {
             // Custom commands
             cmd if cmd == "board" => CommReport::XBoard(XBoardReport::Board),
             cmd if cmd == "history" => CommReport::XBoard(XBoardReport::History),
+            cmd if cmd == "legal" => CommReport::XBoard(XBoardReport::Legal),
             cmd if cmd == "eval" => CommReport::XBoard(XBoardReport::Eval),
             cmd if cmd == "help" => CommReport::XBoard(XBoardReport::Help),
 
@@ -386,6 +389,13 @@ impl XBoard {
         std::mem::drop(mtx_board);
     }
 
+    fn print_legal(ml: Box<MoveList>) {
+        for i in 0..ml.len() {
+            print::move_data(ml.get_move(i), i);
+        }
+        println!();
+    }
+
     fn print_help() {
         println!("The engine is in XBoard communication mode. It supports some custom");
         println!("non-XBoard commands to make use through a terminal window easier.");
@@ -396,6 +406,7 @@ impl XBoard {
         println!("help      :   This help information.");
         println!("board     :   Print the current board state.");
         println!("history   :   Print a list of past board states.");
+        println!("legal     :   Print the legal moves in the position.");
         println!("eval      :   Print evaluation for side to move.");
         println!();
     }
