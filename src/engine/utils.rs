@@ -22,17 +22,12 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use super::{defs::ErrFatal, Engine};
 use crate::{
-    board::Board,
     defs::{EngineRunResult, FEN_KIWIPETE_POSITION},
     misc::parse,
     misc::parse::PotentialMove,
-    movegen::{
-        defs::{Move, MoveList, MoveType},
-        MoveGenerator,
-    },
+    movegen::defs::{Move, MoveList, MoveType},
 };
 use if_chain::if_chain;
-use std::sync::Mutex;
 
 impl Engine {
     // This function sets up a position using a given FEN-string.
@@ -52,6 +47,7 @@ impl Engine {
         Ok(())
     }
 
+    // The engine maintains a list of legal moves for the side to move.
     pub fn create_legal_move_list(&mut self) {
         let mut mtx_board = self.board.lock().expect(ErrFatal::LOCK);
         let mut ml = MoveList::new();
@@ -73,41 +69,32 @@ impl Engine {
     // This function executes a move on the internal board, if it legal to
     // do so in the given position.
     pub fn execute_move(&mut self, m: String) -> bool {
-        // Prepare shorthand variables.
+        // Parse the incoming algebraic notation into a potential move.
         let empty = (0usize, 0usize, 0usize);
         let potential_move = parse::algebraic_move_to_number(&m[..]).unwrap_or(empty);
-        let is_plm = self.is_pseudo_legal_move(potential_move, &self.board, &self.mg);
-        let mut is_legal = false;
+        let is_legal_move = self.is_legal_move(potential_move);
+        let mut result = false;
 
-        if let Ok(m) = is_plm {
-            is_legal = self.board.lock().expect(ErrFatal::LOCK).make(m, &self.mg);
-            if is_legal {
-                self.create_legal_move_list();
-            }
+        // If the move is legal, execute it and generate a new move list.
+        if let Ok(m) = is_legal_move {
+            // This should never fail, because the move was already
+            // determined to be legal.
+            result = self.board.lock().expect(ErrFatal::LOCK).make(m, &self.mg);
+            self.create_legal_move_list();
         }
-        is_legal
+
+        result
     }
 
     // After the engine receives an incoming move, it checks if this move
-    // is actually in the list of pseudo-legal moves for this position.
-    pub fn is_pseudo_legal_move(
-        &self,
-        m: PotentialMove,
-        board: &Mutex<Board>,
-        mg: &MoveGenerator,
-    ) -> Result<Move, ()> {
+    // is actually in the list of legal moves for this position.
+    pub fn is_legal_move(&self, m: PotentialMove) -> Result<Move, ()> {
         let mut result = Err(());
 
-        // Get the pseudo-legal move list for this position.
-        let mut ml = MoveList::new();
-        let mtx_board = board.lock().expect(ErrFatal::LOCK);
-        mg.generate_moves(&mtx_board, &mut ml, MoveType::All);
-        std::mem::drop(mtx_board);
-
-        // Determine if the potential move is pseudo-legal. make() wil
-        // determine final legality when executing the move.
-        for i in 0..ml.len() {
-            let current = ml.get_move(i);
+        // Determine if the potential move is legal by comparing it against
+        // the legal move list the engine maintains for the side to move.
+        for i in 0..self.legal_moves.len() {
+            let current = self.legal_moves.get_move(i);
             if_chain! {
                 if m.0 == current.from();
                 if m.1 == current.to();
