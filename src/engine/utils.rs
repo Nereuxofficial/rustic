@@ -52,6 +52,24 @@ impl Engine {
         Ok(())
     }
 
+    pub fn create_legal_move_list(&mut self) {
+        let mut mtx_board = self.board.lock().expect(ErrFatal::LOCK);
+        let mut ml = MoveList::new();
+        let mut legal_moves = MoveList::new();
+        self.mg.generate_moves(&mtx_board, &mut ml, MoveType::All);
+
+        for i in 0..ml.len() {
+            let m = ml.get_move(i);
+            if mtx_board.make(m, &self.mg) {
+                legal_moves.push(m);
+                mtx_board.unmake();
+            }
+        }
+
+        std::mem::drop(mtx_board);
+        self.legal_moves = legal_moves;
+    }
+
     // This function executes a move on the internal board, if it legal to
     // do so in the given position.
     pub fn execute_move(&mut self, m: String) -> bool {
@@ -63,6 +81,9 @@ impl Engine {
 
         if let Ok(m) = is_plm {
             is_legal = self.board.lock().expect(ErrFatal::LOCK).make(m, &self.mg);
+            if is_legal {
+                self.create_legal_move_list();
+            }
         }
         is_legal
     }

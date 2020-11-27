@@ -33,7 +33,7 @@ use crate::{
     defs::EngineRunResult,
     engine::defs::{ErrFatal, Information, Settings, XBoardFeatures, XBoardSpecifics},
     misc::{cmdline::CmdLine, perft},
-    movegen::MoveGenerator,
+    movegen::{defs::MoveList, MoveGenerator},
     search::{defs::SearchControl, Search},
 };
 use crossbeam_channel::Receiver;
@@ -57,6 +57,7 @@ pub struct Engine {
     mg: Arc<MoveGenerator>,                 // Move Generator.
     info_rx: Option<Receiver<Information>>, // Receiver for incoming information.
     search: Search,                         // Search object (active).
+    legal_moves: MoveList,                  // Legal moves in current position
 }
 
 impl Engine {
@@ -97,6 +98,7 @@ impl Engine {
             mg: Arc::new(MoveGenerator::new()),
             info_rx: None,
             search: Search::new(),
+            legal_moves: MoveList::new(),
         }
     }
 
@@ -114,6 +116,7 @@ impl Engine {
 
         // Setup position and abort if this fails.
         self.setup_position()?;
+        self.create_legal_move_list();
 
         // Run a specific action if requested...
         let mut action_requested = false;
