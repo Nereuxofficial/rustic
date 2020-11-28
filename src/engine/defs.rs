@@ -36,6 +36,13 @@ impl ErrFatal {
     pub const NO_INFO_RX: &'static str = "No incoming Info channel.";
 }
 
+#[derive(PartialEq)]
+pub enum Quiet {
+    No,
+    Whisper,
+    Silent,
+}
+
 pub struct ErrNormal;
 impl ErrNormal {
     pub const NOT_LEGAL: &'static str = "This is not a legal move in this position.";
@@ -59,7 +66,7 @@ pub struct XBoardSpecifics {
 // This struct holds the engine's settings.
 pub struct Settings {
     pub threads: usize,
-    pub quiet: u8,
+    pub quiet: Quiet,
 }
 
 // This enum provides informatin to the engine, with regard to incoming

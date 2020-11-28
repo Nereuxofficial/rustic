@@ -20,7 +20,7 @@ You should have received a copy of the GNU General Public License along
 with this program.  If not, see <http://www.gnu.org/licenses/>.
 ======================================================================= */
 
-use super::Engine;
+use super::{defs::Quiet, Engine};
 use crate::{comm::CommControl, search::defs::SearchReport};
 
 impl Engine {
@@ -31,19 +31,19 @@ impl Engine {
             }
 
             SearchReport::SearchSummary(summary) => {
-                if self.settings.quiet < 2 {
+                if self.settings.quiet != Quiet::Silent {
                     self.comm.send(CommControl::SearchSummary(summary.clone()));
                 }
             }
 
             SearchReport::SearchCurrentMove(curr_move) => {
-                if self.settings.quiet == 0 {
+                if self.settings.quiet == Quiet::No {
                     self.comm.send(CommControl::SearchCurrMove(*curr_move));
                 }
             }
 
             SearchReport::SearchStats(stats) => {
-                if self.settings.quiet == 0 {
+                if self.settings.quiet == Quiet::No {
                     self.comm.send(CommControl::SearchStats(*stats));
                 }
             }

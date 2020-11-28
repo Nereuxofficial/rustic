@@ -31,7 +31,7 @@ use crate::{
     board::Board,
     comm::{uci::Uci, xboard::XBoard, CommControl, CommType, IComm},
     defs::EngineRunResult,
-    engine::defs::{ErrFatal, Information, Settings, XBoardFeatures, XBoardSpecifics},
+    engine::defs::{ErrFatal, Information, Quiet, Settings, XBoardFeatures, XBoardSpecifics},
     misc::{cmdline::CmdLine, perft},
     movegen::{defs::MoveList, MoveGenerator},
     search::{defs::SearchControl, Search},
@@ -75,7 +75,12 @@ impl Engine {
 
         // Get engine settings from the command-line
         let threads = cmdline.threads();
-        let quiet = cmdline.quiet();
+        let quiet = match cmdline.quiet() {
+            0 => Quiet::No,
+            1 => Quiet::Whisper,
+            2 => Quiet::Silent,
+            _ => Quiet::No,
+        };
 
         // Create the engine itself.
         Self {
