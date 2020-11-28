@@ -21,7 +21,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 ======================================================================= */
 
 use super::{
-    defs::{ErrFatal, ErrNormal},
+    defs::{ErrFatal, ErrNormal, Quiet},
     Engine,
 };
 use crate::{
@@ -178,6 +178,10 @@ impl Engine {
                     self.comm.send(CommControl::Message(msg));
                 }
             }
+
+            // Either do or don't post (print) analysis results
+            XBoardReport::Post => self.settings.quiet = Quiet::No,
+            XBoardReport::NoPost => self.settings.quiet = Quiet::Silent,
 
             // xboard "analyze" is equivalent to uci "go infinite"
             XBoardReport::Analyze => {
