@@ -41,9 +41,6 @@ impl Search {
         pv: &mut Vec<Move>,
         refs: &mut SearchRefs,
     ) -> i16 {
-        // If quiet, don't send intermediate stats updates.
-        let quiet = refs.search_params.quiet;
-
         // If we haven't made any moves yet, we're at the root.
         let is_root = refs.search_info.ply == 0;
 
@@ -96,7 +93,7 @@ impl Search {
         // After SEND_STATS nodes have been searched, check if the
         // MIN_TIME_STATS has been exceeded; if so, sne dthe current
         // statistics to the GUI.
-        if !quiet && (refs.search_info.nodes & SEND_STATS == 0) {
+        if refs.search_info.nodes & SEND_STATS == 0 {
             let elapsed = refs.search_info.timer_elapsed();
             let last_stats = refs.search_info.last_stats_sent;
             if elapsed >= last_stats + MIN_TIME_STATS {
@@ -134,7 +131,7 @@ impl Search {
             }
 
             // Send currently searched move to GUI.
-            if !quiet && is_root {
+            if is_root {
                 let elapsed = refs.search_info.timer_elapsed();
                 let lcm = refs.search_info.last_curr_move_sent;
                 if elapsed >= lcm + MIN_TIME_CURR_MOVE {

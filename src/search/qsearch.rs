@@ -32,9 +32,6 @@ use crate::{
 
 impl Search {
     pub fn quiescence(mut alpha: i16, beta: i16, pv: &mut Vec<Move>, refs: &mut SearchRefs) -> i16 {
-        // No intermediate stats updates if quiet.
-        let quiet = refs.search_params.quiet;
-
         // Check if search needs to be terminated.
         if refs.search_info.nodes & CHECK_TERMINATION == 0 {
             Search::check_termination(refs);
@@ -82,7 +79,7 @@ impl Search {
 
         // Update search stats in the GUI. Check every SEND_STATS nodes if
         // the minium MIN_TIME_STATS has elapsed before sending.
-        if !quiet && (refs.search_info.nodes & SEND_STATS == 0) {
+        if refs.search_info.nodes & SEND_STATS == 0 {
             let elapsed = refs.search_info.timer_elapsed();
             let last_stats = refs.search_info.last_stats_sent;
             if elapsed >= last_stats + MIN_TIME_STATS {

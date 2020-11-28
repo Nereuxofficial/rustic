@@ -30,16 +30,20 @@ impl Engine {
                 self.comm.send(CommControl::BestMove(*m));
             }
 
-            SearchReport::SearchCurrentMove(curr_move) => {
-                self.comm.send(CommControl::SearchCurrMove(*curr_move));
-            }
-
             SearchReport::SearchSummary(summary) => {
                 self.comm.send(CommControl::SearchSummary(summary.clone()));
             }
 
+            SearchReport::SearchCurrentMove(curr_move) => {
+                if !self.settings.quiet {
+                    self.comm.send(CommControl::SearchCurrMove(*curr_move));
+                }
+            }
+
             SearchReport::SearchStats(stats) => {
-                self.comm.send(CommControl::SearchStats(*stats));
+                if !self.settings.quiet {
+                    self.comm.send(CommControl::SearchStats(*stats));
+                }
             }
         }
     }

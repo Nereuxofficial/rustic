@@ -42,11 +42,10 @@ impl Engine {
         }
     }
 
-    // Handles "Uci" Comm reports sent by the UCI-module.
+    // Handles "Uci" Comm reports sent by the UCI module.
     fn cr_uci(&mut self, uci_report: &UciReport) {
-        // Setup default variables.
+        // Search parameters to send into the search thread.
         let mut sp = SearchParams::new();
-        sp.quiet = self.settings.quiet;
 
         match uci_report {
             // UCI commands.
@@ -132,8 +131,9 @@ impl Engine {
         }
     }
 
+    // Handles "XBoard" Comm reports send by the XBoard module.
     fn cr_xboard(&mut self, xboard_report: &XBoardReport) {
-        // Setup default variables.
+        // Search parameters to send into the search thread.
         let mut sp = SearchParams::new();
 
         match xboard_report {

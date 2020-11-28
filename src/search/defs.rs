@@ -11,8 +11,8 @@ pub const INF: i16 = 25_000;
 pub const CHECKMATE: i16 = 24_000;
 pub const STALEMATE: i16 = 0;
 pub const DRAW: i16 = 0;
-pub const CHECK_TERMINATION: usize = 0x7FF; // 2.047 nodes
-pub const SEND_STATS: usize = 0x7FFFF; // 524.287 nodes
+pub const CHECK_TERMINATION: usize = 0x7FF; // Check every 2.047 nodes
+pub const SEND_STATS: usize = 0x7FFFF; // Check every 524.287 nodes
 pub const MIN_TIME_STATS: u128 = 2_000; // Minimum time for sending stats
 pub const MIN_TIME_CURR_MOVE: u128 = 1_000; // Minimum time for sending curr_move
 
@@ -84,7 +84,6 @@ pub struct SearchParams {
     pub nodes: usize,            // Maximum number of nodes to search
     pub game_time: GameTime,     // Time available for entire game
     pub search_mode: SearchMode, // Defines the mode to search in
-    pub quiet: bool,             // No intermediate search stats updates
 }
 
 impl SearchParams {
@@ -95,7 +94,6 @@ impl SearchParams {
             nodes: 0,
             game_time: GameTime::new(0, 0, 0, 0, None),
             search_mode: SearchMode::Nothing,
-            quiet: false,
         }
     }
 }
