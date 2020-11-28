@@ -54,7 +54,9 @@ impl CmdLineArgs {
     // Quiet (no search stats updates except on depth change)
     const QUIET_LONG: &'static str = "quiet";
     const QUIET_SHORT: &'static str = "q";
-    const QUIET_HELP: &'static str = "No intermediate search stats updates";
+    const QUIET_HELP: &'static str = "Normal, quiet, or silent search";
+    const QUIET_VALUES: [&'static str; 3] = ["0", "1", "2"];
+    const QUIET_DEFAULT: &'static str = "0";
 
     // Kiwipete
     const KIWI_LONG: &'static str = "kiwipete";
@@ -117,8 +119,12 @@ impl CmdLine {
         self.arguments.is_present(CmdLineArgs::KIWI_LONG)
     }
 
-    pub fn has_quiet(&self) -> bool {
-        self.arguments.is_present(CmdLineArgs::QUIET_LONG)
+    pub fn quiet(&self) -> u8 {
+        self.arguments
+            .value_of(CmdLineArgs::QUIET_LONG)
+            .unwrap_or(CmdLineArgs::QUIET_DEFAULT)
+            .parse()
+            .unwrap_or(0)
     }
 
     #[cfg(feature = "extra")]
@@ -181,7 +187,9 @@ impl CmdLine {
                     .long(CmdLineArgs::QUIET_LONG)
                     .short(CmdLineArgs::QUIET_SHORT)
                     .help(CmdLineArgs::QUIET_HELP)
-                    .takes_value(false),
+                    .takes_value(true)
+                    .default_value(CmdLineArgs::QUIET_DEFAULT)
+                    .possible_values(&CmdLineArgs::QUIET_VALUES),
             );
 
         if cfg!(feature = "extra") {

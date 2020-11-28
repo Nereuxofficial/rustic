@@ -31,17 +31,19 @@ impl Engine {
             }
 
             SearchReport::SearchSummary(summary) => {
-                self.comm.send(CommControl::SearchSummary(summary.clone()));
+                if self.settings.quiet < 2 {
+                    self.comm.send(CommControl::SearchSummary(summary.clone()));
+                }
             }
 
             SearchReport::SearchCurrentMove(curr_move) => {
-                if !self.settings.quiet {
+                if self.settings.quiet == 0 {
                     self.comm.send(CommControl::SearchCurrMove(*curr_move));
                 }
             }
 
             SearchReport::SearchStats(stats) => {
-                if !self.settings.quiet {
+                if self.settings.quiet == 0 {
                     self.comm.send(CommControl::SearchStats(*stats));
                 }
             }

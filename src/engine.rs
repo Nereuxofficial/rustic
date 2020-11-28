@@ -75,7 +75,7 @@ impl Engine {
 
         // Get engine settings from the command-line
         let threads = cmdline.threads();
-        let quiet = cmdline.has_quiet();
+        let quiet = cmdline.quiet();
 
         // Create the engine itself.
         Self {
