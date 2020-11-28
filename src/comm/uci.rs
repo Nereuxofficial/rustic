@@ -196,6 +196,7 @@ impl Uci {
                     // Custom prints for use in the console.
                     CommControl::PrintBoard => Uci::print_board(&t_board),
                     CommControl::PrintHistory => Uci::print_history(&t_board),
+                    CommControl::PrintEval(e) => Uci::print_eval(e),
                     CommControl::PrintLegal(ml) => Uci::print_legal(ml),
                     CommControl::PrintHelp => Uci::print_help(),
 
@@ -458,11 +459,14 @@ impl Uci {
         std::mem::drop(mtx_board);
     }
 
+    fn print_eval(e: i16) {
+        println!("{} cp", e);
+    }
+
     fn print_legal(ml: Box<MoveList>) {
         for i in 0..ml.len() {
             print::move_data(ml.get_move(i), i);
         }
-        println!();
     }
 
     fn print_help() {
