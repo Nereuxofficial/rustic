@@ -29,6 +29,7 @@ use crate::{
     engine::defs::{ErrFatal, Information},
     misc::print,
     movegen::defs::MoveList,
+    search::defs::SearchSummary,
 };
 use crossbeam_channel::{self, Sender};
 use std::{
@@ -186,6 +187,7 @@ impl XBoard {
                     CommControl::Ready => XBoard::ready(),
                     CommControl::Pong(n) => XBoard::pong(n),
                     CommControl::Message(m) => XBoard::message(m),
+                    CommControl::SearchSummary(s) => XBoard::search_summary(s),
                     CommControl::Quit => quit = true,
 
                     // Custom prints for use in the console.
@@ -368,6 +370,19 @@ impl XBoard {
 
     fn message(msg: String) {
         println!("{}", msg);
+    }
+
+    fn search_summary(s: SearchSummary) {
+        let info = format!(
+            "{} {} {} {} {}",
+            s.depth,
+            s.cp,
+            (s.time as f64 / 10.0).round(),
+            s.nodes,
+            s.pv_as_string()
+        );
+
+        println!("{}", info);
     }
 }
 
