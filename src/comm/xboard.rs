@@ -211,7 +211,7 @@ impl XBoard {
     }
 }
 
-// Private functions for this module.
+// Determine the command coming in from the GUI and parse it.
 impl XBoard {
     // This function turns the incoming data into XBoardReports which the
     // engine is able to understand and react to.
@@ -233,7 +233,9 @@ impl XBoard {
             cmd if cmd == "exit" => CommReport::XBoard(XBoardReport::Exit),
             cmd if cmd == "quit" => CommReport::XBoard(XBoardReport::Quit),
 
-            // Commands the engine is going to ignore.
+            // Commands the engine is going to ignore; either because no
+            // response is required, or the functionality is not (yet)
+            // implemented.
             cmd if cmd == "xboard" => CommReport::XBoard(XBoardReport::XBoard),
             cmd if cmd == "random" => CommReport::XBoard(XBoardReport::Random),
             cmd if cmd == "easy" => CommReport::XBoard(XBoardReport::Easy),
@@ -252,7 +254,7 @@ impl XBoard {
     }
 }
 
-// Implements XBoard responses to send to the G(UI).
+// Parse incoming XBoard commands from the GUI.
 impl XBoard {
     fn parse_protover(cmd: &str) -> CommReport {
         enum Tokens {
@@ -351,6 +353,7 @@ impl XBoard {
     }
 }
 
+// Responses to incoming XBoard commands. These are sent to the GUI.
 impl XBoard {
     fn identify() {
         println!("feature done=0");
@@ -376,6 +379,7 @@ impl XBoard {
     }
 
     fn search_summary(s: SearchSummary) {
+        // (Report time in 1/100th instead of 1/1000th.)
         let info = format!(
             "{} {} {} {} {}",
             s.depth,
@@ -389,9 +393,10 @@ impl XBoard {
     }
 
     fn search_stat01(s: XBoardStat01) {
+        // (Report time in 1/100th instead of 1/1000th.)
         let stats = format!(
             "{} {} {} {} {} {}",
-            s.time,
+            (s.time as f64 / 10.0).round(),
             s.nodes,
             s.depth,
             s.moves_left,
