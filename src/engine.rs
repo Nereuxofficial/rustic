@@ -31,7 +31,9 @@ use crate::{
     board::Board,
     comm::{uci::Uci, xboard::XBoard, CommControl, CommType, IComm},
     defs::EngineRunResult,
-    engine::defs::{ErrFatal, Information, Quiet, Settings, XBoardFeatures, XBoardSpecifics},
+    engine::defs::{
+        ErrFatal, Information, Quiet, Settings, XBoardFeatures, XBoardSpecifics, XBoardStat01,
+    },
     misc::{cmdline::CmdLine, perft},
     movegen::{defs::MoveList, MoveGenerator},
     search::{defs::SearchControl, Search},
@@ -96,6 +98,7 @@ impl Engine {
                     sigint: false,
                     sigterm: false,
                 },
+                stat01: XBoardStat01::new(),
             },
             cmdline,
             comm,

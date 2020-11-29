@@ -26,7 +26,7 @@ pub mod xboard;
 use crate::{
     board::Board,
     comm::{uci::UciReport, xboard::XBoardReport},
-    engine::defs::Information,
+    engine::defs::{Information, XBoardStat01},
     movegen::defs::{Move, MoveList},
     search::defs::{SearchCurrentMove, SearchStats, SearchSummary},
 };
@@ -57,6 +57,7 @@ pub enum CommControl {
     SearchSummary(SearchSummary),      // Transmit search information.
     SearchCurrMove(SearchCurrentMove), // Transmit currently considered move.
     SearchStats(SearchStats),          // Transmit search Statistics.
+    AnalyzeStat01(XBoardStat01),       // Transmit XBoard Analyze stats.
     InfoString(String),                // Transmit general information.
     BestMove(Move),                    // Transmit the engine's best move.
     Pong(isize),                       // Transmit "Pong" when "Ping" is received.

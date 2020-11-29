@@ -21,7 +21,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 ======================================================================= */
 
 use super::{
-    defs::{ErrFatal, ErrNormal, Quiet},
+    defs::{ErrFatal, ErrNormal, Quiet, XBoardStat01},
     Engine,
 };
 use crate::{
@@ -188,8 +188,18 @@ impl Engine {
                 self.search.send(SearchControl::Start(sp));
             }
 
-            // xboard "exit" is equivalent to uci "stop"
-            XBoardReport::Exit => self.search.send(SearchControl::Stop),
+            XBoardReport::Dot => {
+                if self.xboard.stat01.is_complete() {
+                    let s = self.xboard.stat01;
+                    self.comm.send(CommControl::AnalyzeStat01(s));
+                }
+            }
+
+            // xboard "exit" is roughly equivalent to uci "stop"
+            XBoardReport::Exit => {
+                self.xboard.stat01 = XBoardStat01::new();
+                self.search.send(SearchControl::Stop);
+            }
 
             XBoardReport::Quit => self.quit(),
 

@@ -21,7 +21,10 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 ======================================================================= */
 
 use super::{defs::Quiet, Engine};
-use crate::{comm::CommControl, search::defs::SearchReport};
+use crate::{
+    comm::{CommControl, CommType},
+    search::defs::SearchReport,
+};
 
 impl Engine {
     pub fn search_reports(&mut self, search_report: &SearchReport) {
@@ -31,19 +34,52 @@ impl Engine {
             }
 
             SearchReport::SearchSummary(summary) => {
-                if self.settings.quiet != Quiet::Silent {
+                let xboard = self.comm.get_protocol_name() == CommType::XBOARD;
+                let silent = self.settings.quiet == Quiet::Silent;
+
+                // If in XBoard mode, start filling the stat01 var. These
+                // can be requested by the GUI by sending the "." command.
+                if xboard {
+                    self.xboard.stat01.time = summary.time;
+                    self.xboard.stat01.nodes = summary.nodes;
+                    self.xboard.stat01.depth = summary.depth;
+                }
+
+                if !silent {
                     self.comm.send(CommControl::SearchSummary(summary.clone()));
                 }
             }
 
-            SearchReport::SearchCurrentMove(curr_move) => {
-                if self.settings.quiet == Quiet::No {
-                    self.comm.send(CommControl::SearchCurrMove(*curr_move));
+            SearchReport::SearchCurrentMove(cm) => {
+                let xboard = self.comm.get_protocol_name() == CommType::XBOARD;
+
+                // If in XBoard mode, update xboard's search stats.
+                if xboard {
+                    let total_moves = self.legal_moves.len();
+                    let move_number = cm.curr_move_number;
+
+                    self.xboard.stat01.moves_left = total_moves - move_number;
+                    self.xboard.stat01.total_moves = total_moves;
+                    self.xboard.stat01.curr_move = cm.curr_move;
+                }
+
+                // Send current move if not in xboard mode and not quiet.
+                if !xboard && (self.settings.quiet == Quiet::No) {
+                    self.comm.send(CommControl::SearchCurrMove(*cm));
                 }
             }
 
             SearchReport::SearchStats(stats) => {
-                if self.settings.quiet == Quiet::No {
+                let xboard = self.comm.get_protocol_name() == CommType::XBOARD;
+
+                // If in XBoard mode, update xboard's search stats.
+                if xboard {
+                    self.xboard.stat01.time = stats.time;
+                    self.xboard.stat01.nodes = stats.nodes;
+                }
+
+                // Send stats if not in xboard mode and not quiet.
+                if !xboard && (self.settings.quiet == Quiet::No) {
                     self.comm.send(CommControl::SearchStats(*stats));
                 }
             }

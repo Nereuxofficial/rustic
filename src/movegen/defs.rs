@@ -145,4 +145,8 @@ impl Move {
             PIECE_CHAR_SMALL[self.promoted()]
         )
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.data == 0
+    }
 }

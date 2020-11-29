@@ -26,7 +26,7 @@ use super::{CommControl, CommReport, CommType, IComm};
 use crate::{
     board::Board,
     defs::About,
-    engine::defs::{ErrFatal, Information},
+    engine::defs::{ErrFatal, Information, XBoardStat01},
     misc::print,
     movegen::defs::MoveList,
     search::defs::SearchSummary,
@@ -50,6 +50,7 @@ pub enum XBoardReport {
     Post,
     NoPost,
     Analyze,
+    Dot,
     Exit, // Stop analyzing current position.
     Quit, // Completely shut down engine.
 
@@ -188,6 +189,7 @@ impl XBoard {
                     CommControl::Pong(n) => XBoard::pong(n),
                     CommControl::Message(m) => XBoard::message(m),
                     CommControl::SearchSummary(s) => XBoard::search_summary(s),
+                    CommControl::AnalyzeStat01(s) => XBoard::search_stat01(s),
                     CommControl::Quit => quit = true,
 
                     // Custom prints for use in the console.
@@ -220,15 +222,16 @@ impl XBoard {
         // Convert to &str for matching the command.
         match i {
             // XBoard Commands
-            cmd if cmd == "post" => CommReport::XBoard(XBoardReport::Post),
-            cmd if cmd == "nopost" => CommReport::XBoard(XBoardReport::NoPost),
-            cmd if cmd == "analyze" => CommReport::XBoard(XBoardReport::Analyze),
-            cmd if cmd == "exit" => CommReport::XBoard(XBoardReport::Exit),
-            cmd if cmd == "quit" => CommReport::XBoard(XBoardReport::Quit),
             cmd if cmd.starts_with("protover") => XBoard::parse_protover(&cmd),
             cmd if cmd.starts_with("ping") => XBoard::parse_ping(&cmd),
             cmd if cmd.starts_with("accepted") => XBoard::parse_accepted(&cmd),
             cmd if cmd.starts_with("setboard") => XBoard::parse_setboard(&cmd),
+            cmd if cmd == "post" => CommReport::XBoard(XBoardReport::Post),
+            cmd if cmd == "nopost" => CommReport::XBoard(XBoardReport::NoPost),
+            cmd if cmd == "analyze" => CommReport::XBoard(XBoardReport::Analyze),
+            cmd if cmd == "." => CommReport::XBoard(XBoardReport::Dot),
+            cmd if cmd == "exit" => CommReport::XBoard(XBoardReport::Exit),
+            cmd if cmd == "quit" => CommReport::XBoard(XBoardReport::Quit),
 
             // Commands the engine is going to ignore.
             cmd if cmd == "xboard" => CommReport::XBoard(XBoardReport::XBoard),
@@ -383,6 +386,20 @@ impl XBoard {
         );
 
         println!("{}", info);
+    }
+
+    fn search_stat01(s: XBoardStat01) {
+        let stats = format!(
+            "{} {} {} {} {} {}",
+            s.time,
+            s.nodes,
+            s.depth,
+            s.moves_left,
+            s.total_moves,
+            s.curr_move.as_string()
+        );
+
+        println!("stat01: {}", stats);
     }
 }
 

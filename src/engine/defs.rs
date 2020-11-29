@@ -20,7 +20,8 @@ You should have received a copy of the GNU General Public License along
 with this program.  If not, see <http://www.gnu.org/licenses/>.
 ======================================================================= */
 
-use crate::{comm::CommReport, search::defs::SearchReport};
+use crate::{comm::CommReport, movegen::defs::Move, search::defs::SearchReport};
+
 // This struct holds messages that are reported on fatal engine errors.
 // These should never happen; if they do the engine is in an unknown state,
 // and it will panic without trying any recovery whatsoever.
@@ -59,8 +60,36 @@ pub struct XBoardFeatures {
     pub sigterm: bool,
 }
 
+#[derive(PartialEq, Copy, Clone)]
+pub struct XBoardStat01 {
+    pub time: u128,
+    pub nodes: usize,
+    pub depth: u8,
+    pub moves_left: u8,
+    pub total_moves: u8,
+    pub curr_move: Move,
+}
+
+impl XBoardStat01 {
+    pub fn new() -> Self {
+        Self {
+            time: 0,
+            nodes: 0,
+            depth: 0,
+            moves_left: 0,
+            total_moves: 0,
+            curr_move: Move::new(0),
+        }
+    }
+
+    pub fn is_complete(&self) -> bool {
+        self.time != 0 && self.nodes != 0 && self.depth != 0 && !self.curr_move.is_empty()
+    }
+}
+
 pub struct XBoardSpecifics {
     pub features: XBoardFeatures,
+    pub stat01: XBoardStat01,
 }
 
 // This struct holds the engine's settings.
