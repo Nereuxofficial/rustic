@@ -136,6 +136,10 @@ impl Engine {
         let mut sp = SearchParams::new();
 
         match xboard_report {
+            // Send an empty response (print a new line) to make sure the
+            // output buffer is flushed.
+            XBoardReport::XBoard => self.comm.send(CommControl::Empty),
+
             // XBoard commands "protover X" is similar to command "uci".
             // The engine replies with an identification and a list of
             // features and options it supports.
@@ -204,7 +208,6 @@ impl Engine {
             XBoardReport::Quit => self.quit(),
 
             // Ignore the following incoming reports from the XBoard comm
-            XBoardReport::XBoard => (), // Response to this command is not required.
             XBoardReport::Random => (), // Engine doesn't support move randomization.
             XBoardReport::Easy => (),   // Pondering off (Pondering not yet supported.)
             XBoardReport::Hard => (),   // Pondering on (Pondering not yet supported.)

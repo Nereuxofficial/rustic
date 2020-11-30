@@ -22,13 +22,11 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // This file implements the XBoard communication module.
 
-use super::{CommControl, CommReport, CommType, IComm};
+use super::{shared, CommControl, CommReport, CommType, IComm};
 use crate::{
     board::Board,
     defs::About,
     engine::defs::{ErrFatal, Information, XBoardStat01},
-    misc::print,
-    movegen::defs::MoveList,
     search::defs::SearchSummary,
 };
 use crossbeam_channel::{self, Sender};
@@ -184,6 +182,7 @@ impl XBoard {
                 let control = control_rx.recv().expect(ErrFatal::CHANNEL);
                 match control {
                     // Perform command as sent by the engine thread.
+                    CommControl::Empty => println!(),
                     CommControl::Identify => XBoard::identify(),
                     CommControl::Ready => XBoard::ready(),
                     CommControl::Pong(n) => XBoard::pong(n),
@@ -193,11 +192,11 @@ impl XBoard {
                     CommControl::Quit => quit = true,
 
                     // Custom prints for use in the console.
-                    CommControl::PrintBoard => XBoard::print_board(&t_board),
-                    CommControl::PrintHistory => XBoard::print_history(&t_board),
-                    CommControl::PrintEval(e) => XBoard::print_eval(e),
-                    CommControl::PrintLegal(ml) => XBoard::print_legal(ml),
-                    CommControl::PrintHelp => XBoard::print_help(),
+                    CommControl::PrintBoard => shared::print_board(&t_board),
+                    CommControl::PrintHistory => shared::print_history(&t_board),
+                    CommControl::PrintEval(e) => shared::print_eval(e),
+                    CommControl::PrintLegal(ml) => shared::print_legal(ml),
+                    CommControl::PrintHelp => shared::print_help("XBoard"),
 
                     // Ignore stuff the XBoard protocol doesn't need.
                     _ => (),
@@ -226,6 +225,7 @@ impl XBoard {
             cmd if cmd.starts_with("ping") => XBoard::parse_ping(&cmd),
             cmd if cmd.starts_with("accepted") => XBoard::parse_accepted(&cmd),
             cmd if cmd.starts_with("setboard") => XBoard::parse_setboard(&cmd),
+            cmd if cmd == "xboard" => CommReport::XBoard(XBoardReport::XBoard),
             cmd if cmd == "post" => CommReport::XBoard(XBoardReport::Post),
             cmd if cmd == "nopost" => CommReport::XBoard(XBoardReport::NoPost),
             cmd if cmd == "analyze" => CommReport::XBoard(XBoardReport::Analyze),
@@ -236,7 +236,6 @@ impl XBoard {
             // Commands the engine is going to ignore; either because no
             // response is required, or the functionality is not (yet)
             // implemented.
-            cmd if cmd == "xboard" => CommReport::XBoard(XBoardReport::XBoard),
             cmd if cmd == "random" => CommReport::XBoard(XBoardReport::Random),
             cmd if cmd == "easy" => CommReport::XBoard(XBoardReport::Easy),
             cmd if cmd == "hard" => CommReport::XBoard(XBoardReport::Hard),
@@ -379,8 +378,8 @@ impl XBoard {
     }
 
     fn search_summary(s: SearchSummary) {
-        // (Report time in 1/100th instead of 1/1000th.)
-        let info = format!(
+        // (Send time in 1/100th instead of 1/1000th.)
+        println!(
             "{} {} {} {} {}",
             s.depth,
             s.cp,
@@ -388,8 +387,6 @@ impl XBoard {
             s.nodes,
             s.pv_as_string()
         );
-
-        println!("{}", info);
     }
 
     fn search_stat01(s: XBoardStat01) {
@@ -405,54 +402,5 @@ impl XBoard {
         );
 
         println!("stat01: {}", stats);
-    }
-}
-
-// implements handling of custom commands. These are mostly used when using
-// the XBoard protocol directly in a terminal window.
-impl XBoard {
-    fn print_board(board: &Arc<Mutex<Board>>) {
-        print::position(&board.lock().expect(ErrFatal::LOCK), None);
-    }
-
-    fn print_history(board: &Arc<Mutex<Board>>) {
-        let mtx_board = board.lock().expect(ErrFatal::LOCK);
-        let length = mtx_board.history.len();
-
-        if length == 0 {
-            println!("No history available.");
-        }
-
-        for i in 0..length {
-            let h = mtx_board.history.get_ref(i);
-            println!("{:<3}| ply: {} {}", i, i + 1, h.as_string());
-        }
-
-        std::mem::drop(mtx_board);
-    }
-
-    fn print_eval(e: i16) {
-        println!("{} cp", e);
-    }
-
-    fn print_legal(ml: Box<MoveList>) {
-        for i in 0..ml.len() {
-            print::move_data(ml.get_move(i), i);
-        }
-    }
-
-    fn print_help() {
-        println!("The engine is in XBoard communication mode. It supports some custom");
-        println!("non-XBoard commands to make use through a terminal window easier.");
-        println!("These commands can also be very useful for debugging purposes.");
-        println!();
-        println!("Custom commands");
-        println!("================================================================");
-        println!("help      :   This help information.");
-        println!("board     :   Print the current board state.");
-        println!("history   :   Print a list of past board states.");
-        println!("legal     :   Print the legal moves in the position.");
-        println!("eval      :   Print evaluation for side to move.");
-        println!();
     }
 }

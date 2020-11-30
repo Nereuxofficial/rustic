@@ -22,13 +22,12 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // This file implements the UCI communication module.
 
-use super::{CommControl, CommReport, CommType, IComm};
+use super::{shared, CommControl, CommReport, CommType, IComm};
 use crate::{
     board::Board,
     defs::{About, FEN_START_POSITION},
     engine::defs::{ErrFatal, Information},
-    misc::print,
-    movegen::defs::{Move, MoveList},
+    movegen::defs::Move,
     search::defs::{GameTime, SearchCurrentMove, SearchStats, SearchSummary, CHECKMATE},
 };
 use crossbeam_channel::{self, Sender};
@@ -194,11 +193,11 @@ impl Uci {
                     CommControl::Message(m) => Uci::message(m),
 
                     // Custom prints for use in the console.
-                    CommControl::PrintBoard => Uci::print_board(&t_board),
-                    CommControl::PrintHistory => Uci::print_history(&t_board),
-                    CommControl::PrintEval(e) => Uci::print_eval(e),
-                    CommControl::PrintLegal(ml) => Uci::print_legal(ml),
-                    CommControl::PrintHelp => Uci::print_help(),
+                    CommControl::PrintBoard => shared::print_board(&t_board),
+                    CommControl::PrintHistory => shared::print_history(&t_board),
+                    CommControl::PrintEval(e) => shared::print_eval(e),
+                    CommControl::PrintLegal(ml) => shared::print_legal(ml),
+                    CommControl::PrintHelp => shared::print_help("UCI"),
 
                     // Ignore everything else. (Additional comm controls to
                     // support other protocols in the engine.)
@@ -433,54 +432,5 @@ impl Uci {
 
     fn message(msg: String) {
         println!("{}", msg);
-    }
-}
-
-// implements handling of custom commands. These are mostly used when using
-// the UCI protocol directly in a terminal window.
-impl Uci {
-    fn print_board(board: &Arc<Mutex<Board>>) {
-        print::position(&board.lock().expect(ErrFatal::LOCK), None);
-    }
-
-    fn print_history(board: &Arc<Mutex<Board>>) {
-        let mtx_board = board.lock().expect(ErrFatal::LOCK);
-        let length = mtx_board.history.len();
-
-        if length == 0 {
-            println!("No history available.");
-        }
-
-        for i in 0..length {
-            let h = mtx_board.history.get_ref(i);
-            println!("{:<3}| ply: {} {}", i, i + 1, h.as_string());
-        }
-
-        std::mem::drop(mtx_board);
-    }
-
-    fn print_eval(e: i16) {
-        println!("{} cp", e);
-    }
-
-    fn print_legal(ml: Box<MoveList>) {
-        for i in 0..ml.len() {
-            print::move_data(ml.get_move(i), i);
-        }
-    }
-
-    fn print_help() {
-        println!("The engine is in UCI communication mode. It supports some custom");
-        println!("non-UCI commands to make use through a terminal window easier.");
-        println!("These commands can also be very useful for debugging purposes.");
-        println!();
-        println!("Custom commands");
-        println!("================================================================");
-        println!("help      :   This help information.");
-        println!("board     :   Print the current board state.");
-        println!("history   :   Print a list of past board states.");
-        println!("legal     :   Print the legal moves in the position.");
-        println!("eval      :   Print evaluation for side to move.");
-        println!();
     }
 }

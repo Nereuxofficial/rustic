@@ -20,6 +20,7 @@ You should have received a copy of the GNU General Public License along
 with this program.  If not, see <http://www.gnu.org/licenses/>.
 ======================================================================= */
 
+mod shared;
 pub mod uci;
 pub mod xboard;
 
@@ -62,6 +63,7 @@ pub enum CommControl {
     BestMove(Move),                    // Transmit the engine's best move.
     Pong(isize),                       // Transmit "Pong" when "Ping" is received.
     Message(String),                   // Output a literal string.
+    Empty,                             // Send an empty println! response.
 
     // Output to screen when running in a terminal window.
     PrintBoard,
