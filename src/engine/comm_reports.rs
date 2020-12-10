@@ -182,6 +182,10 @@ impl Engine {
                 }
             }
 
+            XBoardReport::New => println!("New command received."),
+
+            XBoardReport::Question => println!("? received."),
+
             // Either do or don't post (print) analysis results
             XBoardReport::Post => self.settings.quiet = Quiet::No,
             XBoardReport::NoPost => self.settings.quiet = Quiet::Silent,
