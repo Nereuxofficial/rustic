@@ -1,6 +1,7 @@
 /* =======================================================================
 Rustic is a chess playing engine.
-Copyright (C) 2019-2020, Marcel Vanthoor
+Copyright (C) 2019-2021, Marcel Vanthoor
+https://rustic-chess.org/
 
 Rustic is written in the Rust programming language. It is an original
 work, not derived from any engine that came before it. However, it does
@@ -49,17 +50,6 @@ impl Search {
             Search::check_termination(refs);
         }
 
-        // We have arrived at the leaf node. Evaluate the position and
-        // return the result.
-        if depth == 0 {
-            return Search::quiescence(alpha, beta, pv, refs);
-        }
-
-        // Stop going deeper if we hit MAX_DEPTH.
-        if refs.search_info.ply >= MAX_DEPTH {
-            return evaluation::evaluate_position(refs.board);
-        }
-
         // Determine if we are in check.
         let is_check = refs.mg.square_attacked(
             refs.board,
@@ -73,10 +63,18 @@ impl Search {
             depth += 1;
         }
 
-        /*=== Actual searching starts here ===*/
+        // We have arrived at the leaf node. Evaluate the position and
+        // return the result.
+        if depth == 0 {
+            return Search::quiescence(alpha, beta, pv, refs);
+        }
 
-        // Temporary variables.
-        let mut best_move = Move::new(0);
+        // Stop going deeper if we hit MAX_DEPTH.
+        if refs.search_info.ply >= MAX_DEPTH {
+            return evaluation::evaluate_position(refs.board);
+        }
+
+        /*=== Actual searching starts here ===*/
 
         // Generate the moves in this position
         let mut legal_moves_found = 0;
@@ -170,10 +168,10 @@ impl Search {
             if eval_score > alpha {
                 // Save our better evaluation score.
                 alpha = eval_score;
-                best_move = current_move;
 
+                // Update the Principal Variation.
                 pv.clear();
-                pv.push(best_move);
+                pv.push(current_move);
                 pv.append(&mut node_pv);
             }
         }
@@ -190,10 +188,6 @@ impl Search {
                 return STALEMATE;
             }
         }
-
-        // We store our best move and best PV.
-        refs.search_info.best_move = best_move;
-        refs.search_info.pv = pv.clone();
 
         // We have traversed the entire move list and found the best
         // possible move/eval_score for us at this depth. We can't improve

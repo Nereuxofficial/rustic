@@ -1,6 +1,7 @@
 /* =======================================================================
 Rustic is a chess playing engine.
-Copyright (C) 2019-2020, Marcel Vanthoor
+Copyright (C) 2019-2021, Marcel Vanthoor
+https://rustic-chess.org/
 
 Rustic is written in the Rust programming language. It is an original
 work, not derived from any engine that came before it. However, it does
@@ -62,9 +63,6 @@ impl Search {
         // simply keep searching until the stand-pat above breaks us out of
         // the recursion, or until there are no more captures available.
         // Then the function will return after looping the move list.
-
-        // Temporary variables.
-        let mut best_move = Move::new(0);
 
         // Generate only capture moves.
         let mut move_list = MoveList::new();
@@ -134,16 +132,13 @@ impl Search {
             if eval_score > alpha {
                 // Save our better evaluation score.
                 alpha = eval_score;
-                best_move = current_move;
+
+                // Update the Principal Variation.
                 pv.clear();
-                pv.push(best_move);
+                pv.push(current_move);
                 pv.append(&mut node_pv);
             }
         }
-
-        // Store the best move and best PV we found.
-        refs.search_info.best_move = best_move;
-        refs.search_info.pv = pv.clone();
 
         // We have traversed the entire move list and found the best score for us,
         // so we return this.
