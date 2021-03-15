@@ -55,16 +55,7 @@ impl Engine {
             // UCI commands.
             UciReport::Uci => self.comm.send(CommControl::Identify),
 
-            UciReport::UciNewGame => self
-                .board
-                .lock()
-                .expect(ErrFatal::LOCK)
-                .fen_read(Some(FEN_START_POSITION))
-                .expect(ErrFatal::NEW_GAME),
-
             UciReport::IsReady => self.comm.send(CommControl::Ready),
-
-            UciReport::Uci => self.comm.send(CommControl::Identify),
 
             UciReport::UciNewGame => {
                 self.board
@@ -74,8 +65,6 @@ impl Engine {
                     .expect(ErrFatal::NEW_GAME);
                 self.tt_search.lock().expect(ErrFatal::LOCK).clear();
             }
-
-            UciReport::IsReady => self.comm.send(CommControl::Ready),
 
             UciReport::SetOption(option) => {
                 match option {

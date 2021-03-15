@@ -156,16 +156,11 @@ impl Engine {
 
     // Run the engine.
     pub fn run(&mut self) -> EngineRunResult {
-        let protocol = self.comm.get_protocol_name();
-        if protocol != CommType::XBOARD {
+        if self.comm.get_protocol_name() != CommType::XBOARD {
             self.print_ascii_logo();
             self.print_about();
             println!();
         }
-
-        self.print_ascii_logo();
-        self.print_about();
-        println!();
 
         // Setup position and abort if this fails.
         self.setup_position()?;
