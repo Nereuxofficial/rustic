@@ -28,10 +28,8 @@ pub mod xboard;
 use crate::{
     board::Board,
     comm::{uci::UciReport, xboard::XBoardReport},
-    engine::defs::XBoardStat01,
-    engine::defs::{EngineOption, Information},
-    movegen::defs::Move,
-    movegen::defs::MoveList,
+    engine::defs::{EngineOption, Information, XBoardStat01},
+    movegen::defs::{Move, MoveList},
     search::defs::{SearchCurrentMove, SearchStats, SearchSummary},
 };
 use crossbeam_channel::Sender;
