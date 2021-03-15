@@ -27,7 +27,7 @@ use super::{shared, CommControl, CommReport, CommType, IComm};
 use crate::{
     board::Board,
     defs::About,
-    engine::defs::{ErrFatal, Information, XBoardStat01},
+    engine::defs::{EngineOption, ErrFatal, Information, XBoardStat01},
     search::defs::SearchSummary,
 };
 use crossbeam_channel::{self, Sender};
@@ -95,10 +95,15 @@ impl XBoard {
 
 // Any communication module must implement the trait IComm.
 impl IComm for XBoard {
-    fn init(&mut self, report_tx: Sender<Information>, board: Arc<Mutex<Board>>) {
+    fn init(
+        &mut self,
+        report_tx: Sender<Information>,
+        board: Arc<Mutex<Board>>,
+        options: Arc<Vec<EngineOption>>,
+    ) {
         // Start threads
         self.report_thread(report_tx);
-        self.control_thread(board);
+        self.control_thread(board, options);
     }
 
     // The creator of the Comm module can use this function to send
@@ -171,7 +176,7 @@ impl XBoard {
     }
 
     // The control thread receives commands from the engine thread.
-    fn control_thread(&mut self, board: Arc<Mutex<Board>>) {
+    fn control_thread(&mut self, board: Arc<Mutex<Board>>, options: Arc<Vec<EngineOption>>) {
         // Create an incoming channel for the control thread.
         let (control_tx, control_rx) = crossbeam_channel::unbounded::<CommControl>();
 
@@ -179,6 +184,7 @@ impl XBoard {
         let control_handle = thread::spawn(move || {
             let mut quit = false;
             let t_board = Arc::clone(&board);
+            let _t_optoins = Arc::clone(&options);
 
             // Keep running as long as Quit is not received.
             while !quit {

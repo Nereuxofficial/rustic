@@ -23,6 +23,8 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::{comm::CommReport, movegen::defs::Move, search::defs::SearchReport};
 
+pub use crate::engine::transposition::{HashFlag, IHashData, PerftData, SearchData, TT};
+
 // This struct holds messages that are reported on fatal engine errors.
 // These should never happen; if they do the engine is in an unknown state,
 // and it will panic without trying any recovery whatsoever.
@@ -48,6 +50,7 @@ pub enum Quiet {
 pub struct ErrNormal;
 impl ErrNormal {
     pub const NOT_LEGAL: &'static str = "This is not a legal move in this position.";
+    pub const NOT_INT: &'static str = "The value given was not an integer.";
     pub const FEN_FAILED: &'static str = "Setting up FEN failed. Board not changed.";
 }
 
@@ -65,7 +68,7 @@ pub struct XBoardFeatures {
 pub struct XBoardStat01 {
     pub time: u128,
     pub nodes: usize,
-    pub depth: u8,
+    pub depth: i8,
     pub moves_left: u8,
     pub total_moves: u8,
     pub curr_move: Move,
@@ -97,6 +100,7 @@ pub struct XBoardSpecifics {
 pub struct Settings {
     pub threads: usize,
     pub quiet: Quiet,
+    pub tt_size: usize,
 }
 
 // This enum provides informatin to the engine, with regard to incoming
@@ -105,4 +109,53 @@ pub struct Settings {
 pub enum Information {
     Comm(CommReport),
     Search(SearchReport),
+}
+
+pub enum UiElement {
+    Spin,
+    Button,
+}
+
+pub struct EngineOption {
+    pub name: &'static str,
+    pub ui_element: UiElement,
+    pub default: Option<String>,
+    pub min: Option<String>,
+    pub max: Option<String>,
+}
+
+impl EngineOption {
+    pub fn new(
+        name: &'static str,
+        ui_element: UiElement,
+        default: Option<String>,
+        min: Option<String>,
+        max: Option<String>,
+    ) -> Self {
+        Self {
+            name,
+            ui_element,
+            default,
+            min,
+            max,
+        }
+    }
+}
+
+#[derive(PartialEq, Clone)]
+pub enum EngineOptionName {
+    Hash(String),
+    ClearHash,
+    Nothing,
+}
+impl EngineOptionName {
+    pub const HASH: &'static str = "Hash";
+    pub const CLEAR_HASH: &'static str = "Clear Hash";
+}
+
+pub struct EngineOptionDefaults;
+impl EngineOptionDefaults {
+    pub const HASH_DEFAULT: &'static str = "32";
+    pub const HASH_MIN: &'static str = "0";
+    pub const HASH_MAX: &'static str = "32768";
 }

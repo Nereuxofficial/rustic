@@ -28,8 +28,10 @@ pub mod xboard;
 use crate::{
     board::Board,
     comm::{uci::UciReport, xboard::XBoardReport},
-    engine::defs::{Information, XBoardStat01},
-    movegen::defs::{Move, MoveList},
+    engine::defs::XBoardStat01,
+    engine::defs::{EngineOption, Information},
+    movegen::defs::Move,
+    movegen::defs::MoveList,
     search::defs::{SearchCurrentMove, SearchStats, SearchSummary},
 };
 use crossbeam_channel::Sender;
@@ -44,7 +46,12 @@ impl CommType {
 
 // Defines the public functions a Comm module must implement.
 pub trait IComm {
-    fn init(&mut self, report_tx: Sender<Information>, board: Arc<Mutex<Board>>);
+    fn init(
+        &mut self,
+        report_tx: Sender<Information>,
+        board: Arc<Mutex<Board>>,
+        options: Arc<Vec<EngineOption>>,
+    );
     fn send(&self, msg: CommControl);
     fn wait_for_shutdown(&mut self);
     fn get_protocol_name(&self) -> &'static str;

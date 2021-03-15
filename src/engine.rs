@@ -26,6 +26,7 @@ mod comm_reports;
 pub mod defs;
 mod main_loop;
 mod search_reports;
+mod transposition;
 mod utils;
 
 use crate::{
@@ -33,7 +34,8 @@ use crate::{
     comm::{uci::Uci, xboard::XBoard, CommControl, CommType, IComm},
     defs::EngineRunResult,
     engine::defs::{
-        ErrFatal, Information, Quiet, Settings, XBoardFeatures, XBoardSpecifics, XBoardStat01,
+        EngineOption, EngineOptionDefaults, EngineOptionName, ErrFatal, Information, Quiet,
+        Settings, UiElement, XBoardFeatures, XBoardSpecifics, XBoardStat01,
     },
     misc::{cmdline::CmdLine, perft},
     movegen::{defs::MoveList, MoveGenerator},
@@ -41,6 +43,7 @@ use crate::{
 };
 use crossbeam_channel::Receiver;
 use std::sync::{Arc, Mutex};
+use transposition::{PerftData, SearchData, TT};
 
 #[cfg(feature = "extra")]
 use crate::{
@@ -54,9 +57,12 @@ pub struct Engine {
     quit: bool,                             // Flag that will quit the main thread.
     settings: Settings,                     // Struct holding all the settings.
     xboard: XBoardSpecifics,                // Storage for XBoard specifics.
+    options: Arc<Vec<EngineOption>>,        // Engine options exported to the GUI
     cmdline: CmdLine,                       // Command line interpreter.
     comm: Box<dyn IComm>,                   // Communications (active).
     board: Arc<Mutex<Board>>,               // This is the main engine board.
+    tt_perft: Arc<Mutex<TT<PerftData>>>,    // TT for running perft.
+    tt_search: Arc<Mutex<TT<SearchData>>>,  // TT for search information.
     mg: Arc<MoveGenerator>,                 // Move Generator.
     info_rx: Option<Receiver<Information>>, // Receiver for incoming information.
     search: Search,                         // Search object (active).
@@ -76,7 +82,7 @@ impl Engine {
             _ => panic!(ErrFatal::CREATE_COMM),
         };
 
-        // Get engine settings from the command-line
+        // Get engine settings from the command-line.
         let threads = cmdline.threads();
         let quiet = match cmdline.quiet() {
             0 => Quiet::No,
@@ -84,11 +90,40 @@ impl Engine {
             2 => Quiet::Silent,
             _ => Quiet::No,
         };
+        let tt_size = cmdline.hash();
+
+        // List of options that should be announced to the GUI.
+        let options = vec![
+            EngineOption::new(
+                EngineOptionName::HASH,
+                UiElement::Spin,
+                Some(EngineOptionDefaults::HASH_DEFAULT.to_string()),
+                Some(EngineOptionDefaults::HASH_MIN.to_string()),
+                Some(EngineOptionDefaults::HASH_MAX.to_string()),
+            ),
+            EngineOption::new(
+                EngineOptionName::CLEAR_HASH,
+                UiElement::Button,
+                None,
+                None,
+                None,
+            ),
+        ];
+
+        // Initialize correct TT.
+        let tt_perft: Arc<Mutex<TT<PerftData>>>;
+        let tt_search: Arc<Mutex<TT<SearchData>>>;
+        if cmdline.perft() > 0 {
+            tt_perft = Arc::new(Mutex::new(TT::<PerftData>::new(tt_size)));
+            tt_search = Arc::new(Mutex::new(TT::<SearchData>::new(0)));
+        } else {
+            tt_perft = Arc::new(Mutex::new(TT::<PerftData>::new(0)));
+            tt_search = Arc::new(Mutex::new(TT::<SearchData>::new(tt_size)));
+        };
 
         // Create the engine itself.
         Self {
             quit: false,
-            settings: Settings { threads, quiet },
             xboard: XBoardSpecifics {
                 features: XBoardFeatures {
                     done: false,
@@ -101,10 +136,18 @@ impl Engine {
                 },
                 stat01: XBoardStat01::new(),
             },
+            settings: Settings {
+                threads,
+                quiet,
+                tt_size,
+            },
+            options: Arc::new(options),
             cmdline,
             comm,
             board: Arc::new(Mutex::new(Board::new())),
             mg: Arc::new(MoveGenerator::new()),
+            tt_perft,
+            tt_search,
             info_rx: None,
             search: Search::new(),
             legal_moves: MoveList::new(),
@@ -117,11 +160,12 @@ impl Engine {
         if protocol != CommType::XBOARD {
             self.print_ascii_logo();
             self.print_about();
-            self.print_settings(self.settings.threads, protocol);
             println!();
-        } else {
-            self.print_short_about(self.settings.threads, protocol);
         }
+
+        self.print_ascii_logo();
+        self.print_about();
+        println!();
 
         // Setup position and abort if this fails.
         self.setup_position()?;
@@ -133,7 +177,13 @@ impl Engine {
         // Run perft if requested.
         if self.cmdline.perft() > 0 {
             action_requested = true;
-            perft::run(self.board.clone(), self.cmdline.perft(), self.mg.clone());
+            perft::run(
+                self.board.clone(),
+                self.cmdline.perft(),
+                Arc::clone(&self.mg),
+                Arc::clone(&self.tt_perft),
+                self.settings.tt_size > 0,
+            );
         }
 
         // === Only available with "extra" features enabled. ===
@@ -146,10 +196,20 @@ impl Engine {
         };
 
         #[cfg(feature = "extra")]
-        // Run large EPD test suite if requested.
+        // Run large EPD test suite if requested. Because the -p (perft)
+        // option is not used in this scenario, the engine initializes the
+        // search TT instead of the one for perft. The -e option is
+        // not available in a non-extra compilation, so it cannot be
+        // checked there. Just fix the issue by resizing both the perft and
+        // search TT's appropriately for running the EPD suite.
         if self.cmdline.has_test() {
             action_requested = true;
-            testsuite::run();
+            self.tt_perft
+                .lock()
+                .expect(ErrFatal::LOCK)
+                .resize(self.settings.tt_size);
+            self.tt_search.lock().expect(ErrFatal::LOCK).resize(0);
+            testsuite::run(Arc::clone(&self.tt_perft), self.settings.tt_size > 0);
         }
         // =====================================================
 

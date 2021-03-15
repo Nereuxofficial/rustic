@@ -62,6 +62,8 @@ use crate::{
     defs::{Piece, Square},
 };
 
+const MOVE_ONLY: usize = 0x00_00_00_00_00_FF_FF_FF;
+
 /* "Shift" is an enum which contains the number of bits that needed to be shifted to store
  * move data in a specific place within the u64 integer. This makes sure that, should the
  * format change, the location needs to be changed only within the integer. */
@@ -134,8 +136,8 @@ impl Move {
         ((self.data >> Shift::SORTSCORE as u64) & 0xFF) as u8
     }
 
-    pub fn add_score(&mut self, value: u8) {
-        self.data += (value as usize) << Shift::SORTSCORE;
+    pub fn set_score(&mut self, value: u8) {
+        self.data |= (value as usize) << Shift::SORTSCORE;
     }
 
     pub fn as_string(&self) -> String {
@@ -149,5 +151,28 @@ impl Move {
 
     pub fn is_empty(&self) -> bool {
         self.data == 0
+    }
+
+    pub fn to_hash_move(&self) -> TTMove {
+        TTMove::new((self.data & MOVE_ONLY) as u32)
+    }
+
+    pub fn equal_to_hash_move(&self, hash_move: TTMove) -> bool {
+        ((self.data & MOVE_ONLY) as u32) == hash_move.get_move()
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct TTMove {
+    data: u32,
+}
+
+impl TTMove {
+    pub fn new(m: u32) -> Self {
+        Self { data: m }
+    }
+
+    pub fn get_move(&self) -> u32 {
+        self.data
     }
 }

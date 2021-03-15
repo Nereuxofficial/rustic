@@ -28,6 +28,7 @@ use super::{
 use crate::{
     comm::{uci::UciReport, xboard::XBoardReport, CommControl, CommReport},
     defs::{About, FEN_START_POSITION},
+    engine::defs::EngineOptionName,
     evaluation::evaluate_position,
     search::defs::{SearchControl, SearchMode, SearchParams},
 };
@@ -42,8 +43,10 @@ impl Engine {
             CommReport::XBoard(x) => self.cr_xboard(x),
         }
     }
+}
 
-    // Handles "Uci" Comm reports sent by the UCI module.
+// Handles "Uci" Comm reports sent by the UCI module.
+impl Engine {
     fn cr_uci(&mut self, uci_report: &UciReport) {
         // Search parameters to send into the search thread.
         let mut sp = SearchParams::new();
@@ -60,6 +63,38 @@ impl Engine {
                 .expect(ErrFatal::NEW_GAME),
 
             UciReport::IsReady => self.comm.send(CommControl::Ready),
+
+            UciReport::Uci => self.comm.send(CommControl::Identify),
+
+            UciReport::UciNewGame => {
+                self.board
+                    .lock()
+                    .expect(ErrFatal::LOCK)
+                    .fen_read(Some(FEN_START_POSITION))
+                    .expect(ErrFatal::NEW_GAME);
+                self.tt_search.lock().expect(ErrFatal::LOCK).clear();
+            }
+
+            UciReport::IsReady => self.comm.send(CommControl::Ready),
+
+            UciReport::SetOption(option) => {
+                match option {
+                    EngineOptionName::Hash(value) => {
+                        if let Ok(v) = value.parse::<usize>() {
+                            self.tt_search.lock().expect(ErrFatal::LOCK).resize(v);
+                        } else {
+                            let msg = String::from(ErrNormal::NOT_INT);
+                            self.comm.send(CommControl::InfoString(msg));
+                        }
+                    }
+
+                    EngineOptionName::ClearHash => {
+                        self.tt_search.lock().expect(ErrFatal::LOCK).clear()
+                    }
+
+                    EngineOptionName::Nothing => (),
+                };
+            }
 
             UciReport::Position(fen, moves) => {
                 let fen_result = self.board.lock().expect(ErrFatal::LOCK).fen_read(Some(fen));
@@ -130,7 +165,9 @@ impl Engine {
             UciReport::Unknown => (),
         }
     }
+}
 
+impl Engine {
     // Handles "XBoard" Comm reports send by the XBoard module.
     fn cr_xboard(&mut self, xboard_report: &XBoardReport) {
         // Search parameters to send into the search thread.

@@ -48,24 +48,7 @@ impl Engine {
         println!("Author: {}", About::AUTHOR);
         println!("EMail: {}", About::EMAIL);
         println!("Website: {}", About::WEBSITE);
-    }
 
-    pub fn print_short_about(&self, threads: usize, protocol: &str) {
-        let t = if threads == 1 { "thread" } else { "threads" };
-        println!(
-            "{} {} by {} ({} mode, {} {})",
-            About::ENGINE,
-            About::VERSION,
-            About::AUTHOR,
-            protocol,
-            threads,
-            t
-        );
-    }
-
-    pub fn print_settings(&self, threads: usize, protocol: &str) {
-        println!("Protocol: {}", protocol);
-        println!("Threads: {}", threads);
         #[cfg(debug_assertions)]
         println!("{}", NOTICE_DEBUG_MODE);
     }
