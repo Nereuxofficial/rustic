@@ -70,32 +70,27 @@ These will be listed under "Features" as they are implemented.
 
 # Included binaries, supported platforms
 
-There are several binaries supplied in the Rustic Alpha 1 release. For
-Windows, a generic 32-bit binary is supplied. As most Linux distributions
-have dropped 32-bit support (or are in the process of doing so), only
-64-binaries are included. As long as the Raspberry Pi OS is not yet
-officially 64-bit, only a 32-bit version that runs on the Buster release is
-supplied.
+There are several binaries supplied in each Rustic release, as listed
+below. They are listed in the order of slowest to fastest. Use the fastest
+binary that will run on your system, for maximum playing strength.
 
-The Windows binaries have been tested on Windows 10,
-but will probably also work on Windows 8.x or 7, as long as the correct C++
-Redistributables are installed.
+Many Linux distributions are dropping 32-bit support, or have made it a
+non-standard version. Therefore a binary for 32-bit linux is not supplied.
+The binary for Raspberry Pi OS is 32-bit only, because the 64-bit version
+of the operating system is still experimental.
 
-The Linux binaries have been created on Debian 8 Stable ("Jessie"), and
-tested on Debian 9 and 10 Stable. They should run on any Debian-based
-installateion that has the library versions of Debian 8 stable or newer
-installed. To my regret I don't have the time or the resources to provide
-lots of binaries for other versions of Linux; I only ever use Debian
-Stable. If you wish to run Rustic on a different distribution (if it
-doesn't do so out of the box), then try and compile it yourself using the
-compilation tips below.
+If you wish to run Rustic on a system for which no binary is supplied, you
+can try to compile the engine yourself using the compilation tips below.
+Make sure to install at least Rust version 1.46.
 
 - Windows (tested on Windows 10)
   - 32-bit generic
+  - 64-bit generic
   - 64-bit old
-  - 64-bit popcnt
+  - 64-bit popcnt 
   - 64-bit bmi2
-- Linux (since Debian 8 stable)
+- Linux (since Debian 8 Stable)
+  - 64-bit generic
   - 64-bit old
   - 64-bit popcnt
   - 64-bit bmi2
@@ -119,15 +114,16 @@ Follow the instructions below if you want to compile the engine yourself.
       are compatible with Windows/Visual Studio's debugger. This will
       require the Microsoft Visual C++ Build Tools, because it uses the
       Microsoft Linker.)
-- If you are running Windows, it is recommended to have
+- If you are running Windows, it is required to have
   [MSYS2](https://www.msys2.org/) installed, because it provides Bash and
   several Linux development tools.
   There are three ways to run MSYS:
     1. MSYS2 MinGW64: for 64-bit compiles
     2. MSYS2 MinGW32: for 32-bit compiles
     3. MSYS2 MSYS: for maintaining MSYS2.
-- Install GCC
-- Install Binutils.
+- In MSYS2:
+  - Install GCC
+  - Install Binutils.
 - Make sure you keep these environments apart. Do not install the 64-bit
   GCC compiler in the 32-bit environment and the other way around. If you
   want to produce both 32-bit and 64-bit binaries, you will have to set up
@@ -146,6 +142,14 @@ Follow the instructions below if you want to compile the engine yourself.
 Create the bin folder:
 
 mkdir -p ./bin/linux
+
+64-bit generic (Should run on any x86_64 / amd64 CPU)
+
+rm -rf ./target && \
+export RUSTFLAGS="-C target-cpu=athlon64" && \
+cargo build --release && \
+strip -s ./target/release/rustic && \
+mv ./target/release/rustic ./bin/linux/rustic-alpha-2_64-bit-generic
 
 64-bit old (Core2 CPU's and newer):
 
@@ -190,9 +194,18 @@ mkdir -p ./bin/windows
 32-bit Generic (Should run on anything since the Pentium II):
 
 rm -rf ./target && \
+export RUSTFLAGS="-C target-cpu=i686" && \
 cargo build --release --target="i686-pc-windows-gnu" && \
 strip -s ./target/i686-pc-windows-gnu/release/rustic.exe && \
 mv ./target/i686-pc-windows-gnu/release/rustic.exe ./bin/windows/rustic-alpha-2_32-bit-generic.exe
+
+64-bit generic (Should run on any x86_64 / amd64 CPU)
+
+rm -rf ./target && \
+export RUSTFLAGS="-C target-cpu=athlon64" && \
+cargo build --release && \
+strip -s ./target/release/rustic.exe && \
+mv ./target/release/rustic.exe ./bin/windows/rustic-alpha-2_64-bit-generic.exe
 
 64-bit old (Core2 CPU or newer):
 
@@ -333,7 +346,11 @@ one or more contributions (in no particular order).
 - Taimo (author of Monchester): for pointing out a potential variable underflow
   problem within the time management, that made Rustic crash in debug-mode.
 - Sven Schüle (author of Jumbo, KnockOut, Surprise) for pointing out some lines of
-  redundant, and thus confusing code in Rustic's search and qsearch functions.
+  redundant, and thus confusing code in Rustic's search and qsearch
+  functions.
+- Thomas (Lithander, author of MinimalChess): for the engaging discussions
+  regarding (chess) programming, and providing another stable engine with
+  compiles especially for me to test against.
 - Ed Schröder (author of Rebel and Gideon) and Robert Hyatt (author of Cray
   Blitz and Crafty): for still hanging around chess forums, answering
   questions, even after writing chess engines for 40 or 50 years.

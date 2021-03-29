@@ -82,7 +82,7 @@ impl Engine {
         let comm: Box<dyn IComm> = match &cmdline.comm()[..] {
             CommType::XBOARD => Box::new(XBoard::new()),
             CommType::UCI => Box::new(Uci::new()),
-            _ => panic!(ErrFatal::CREATE_COMM),
+            _ => panic!("{}", ErrFatal::CREATE_COMM),
         };
 
         // Get engine settings from the command-line.
