@@ -155,6 +155,10 @@ impl Move {
         )
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.data == 0
+    }
+
     pub fn to_short_move(&self) -> ShortMove {
         ShortMove::new((self.data & MOVE_ONLY) as u32)
     }
