@@ -166,7 +166,7 @@ impl Engine {
     pub fn run(&mut self) -> EngineRunResult {
         if self.comm.get_protocol_name() != CommType::XBOARD {
             self.print_ascii_logo();
-            self.print_about();
+            self.print_about(&self.settings);
             println!();
         }
 

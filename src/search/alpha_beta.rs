@@ -26,10 +26,11 @@ use super::{
     Search, SearchRefs,
 };
 use crate::{
+    board::defs::Pieces,
     defs::MAX_DEPTH,
     engine::defs::{ErrFatal, HashFlag, SearchData},
     evaluation,
-    movegen::defs::{Move, MoveList, MoveType, TTMove},
+    movegen::defs::{Move, MoveList, MoveType, ShortMove},
 };
 
 impl Search {
@@ -83,7 +84,7 @@ impl Search {
 
         // Variables to hold TT value and move if any.
         let mut tt_value: Option<i16> = None;
-        let mut tt_move: TTMove = TTMove::new(0);
+        let mut tt_move: ShortMove = ShortMove::new(0);
 
         // Probe the TT for information.
         if refs.tt_enabled {
@@ -115,7 +116,7 @@ impl Search {
             .generate_moves(refs.board, &mut move_list, MoveType::All);
 
         // Do move scoring, so the best move will be searched first.
-        Search::score_moves(&mut move_list, tt_move);
+        Search::score_moves(&mut move_list, tt_move, refs);
 
         // After SEND_STATS nodes have been searched, check if the
         // MIN_TIME_STATS has been exceeded; if so, sne dthe current
@@ -131,7 +132,7 @@ impl Search {
         let mut hash_flag = HashFlag::Alpha;
 
         // Holds the best move in the move loop, for storing into the TT.
-        let mut best_move: TTMove = TTMove::new(0);
+        let mut best_move: ShortMove = ShortMove::new(0);
 
         // Iterate over the moves.
         for i in 0..move_list.len() {
@@ -181,7 +182,7 @@ impl Search {
             // save a new best_move that'll go into the hash table.
             if eval_score > best_eval_score {
                 best_eval_score = eval_score;
-                best_move = current_move.to_hash_move();
+                best_move = current_move.to_short_move();
             }
 
             // Beta cutoff: this move is so good for our opponent, that we
@@ -197,6 +198,13 @@ impl Search {
                         best_move,
                     ),
                 );
+
+                // If the move is not a capture but still causes a
+                // beta-cutoff, then store it as a killer move.
+                if current_move.captured() == Pieces::NONE {
+                    Search::store_killer_move(current_move, refs);
+                }
+
                 return beta;
             }
 
