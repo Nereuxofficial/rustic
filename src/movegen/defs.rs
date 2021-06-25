@@ -164,6 +164,10 @@ impl Move {
     pub fn get_move(&self) -> u32 {
         (self.data & MOVE_ONLY) as u32
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.data == 0
+    }
 }
 
 #[derive(Copy, Clone, PartialEq)]
