@@ -29,7 +29,7 @@ use crate::{
     comm::{uci::UciReport, xboard::XBoardReport, CommControl, CommReport},
     defs::{About, FEN_START_POSITION},
     engine::defs::EngineOptionName,
-    evaluation::evaluate_position,
+    evaluation::Evaluation,
     search::defs::{SearchControl, SearchMode, SearchParams, OVERHEAD},
 };
 
@@ -147,8 +147,11 @@ impl Engine {
                 self.comm.send(CommControl::PrintLegal(ml))
             }
             UciReport::Eval => {
-                let evaluation = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
-                self.comm.send(CommControl::PrintEval(evaluation));
+                let mtx_board = &self.board.lock().expect(ErrFatal::LOCK);
+                let eval = Evaluation::evaluate_position(&mtx_board);
+                let p_v = mtx_board.game_state.phase_value;
+                let msg = format!("Evaluation: {} centipawns, phase value: {}", eval, p_v);
+                self.comm.send(CommControl::InfoString(msg));
             }
             UciReport::Help => self.comm.send(CommControl::PrintHelp),
             UciReport::Unknown => (),
@@ -251,8 +254,9 @@ impl Engine {
                 self.comm.send(CommControl::PrintLegal(ml));
             }
             XBoardReport::Eval => {
-                let evaluation = evaluate_position(&self.board.lock().expect(ErrFatal::LOCK));
-                self.comm.send(CommControl::PrintEval(evaluation));
+                let mtx_board = &self.board.lock().expect(ErrFatal::LOCK);
+                let e = Evaluation::evaluate_position(&mtx_board);
+                self.comm.send(CommControl::PrintEval(e));
             }
             XBoardReport::Help => self.comm.send(CommControl::PrintHelp),
             XBoardReport::Unknown(cmd) => {
