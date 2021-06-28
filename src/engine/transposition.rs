@@ -299,7 +299,10 @@ impl<D: IHashData + Copy + Clone> TT<D> {
 
     // Clear TT by replacing it with a new one.
     pub fn clear(&mut self) {
-        self.resize(self.megabytes);
+        for bucket in self.tt.iter_mut() {
+            *bucket = Bucket::new();
+        }
+        self.used_entries = 0;
     }
 
     // Provides TT usage in permille (1 per 1000, as oppposed to percent,
